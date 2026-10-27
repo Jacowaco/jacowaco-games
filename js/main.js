@@ -160,37 +160,47 @@
   // ===== MAPA: coreografía ===================================================
   const mapa = $('.mapa'), globeEl = $('#globe'), mapEl = $('#map');
   const label = $('#mapLabel'), alt = $('#mapAlt'), pin = $('#mapPin'), card = $('#mapCard');
-  const STAGES = [[0, 'Planeta Tierra'], [0.3, 'Sudamérica'], [0.47, 'Argentina'], [0.62, 'Buenos Aires'], [0.8, 'Bosques de Palermo'], [0.93, '']];
-  let target = 0, current = 0, rafOn = false, mapaVisible = false;
+  // Recorrido (p = progreso de scroll en la sección):
+  //   0 → GLOBE_END  globo girando y acercándose
+  //   GLOBE_END → ARRIVE  descenso satelital hasta la plaza
+  //   ARRIVE → 1  la plaza queda quieta y la info aparece por partes (pin, nombre, ubicación, botón)
+  const GLOBE_END = 0.4, ARRIVE = 0.68;
+  const STAGES = [[0, 'Planeta Tierra'], [0.22, 'Sudamérica'], [0.36, 'Argentina'], [0.47, 'Buenos Aires'], [0.58, 'Bosques de Palermo'], [ARRIVE, '']];
+  let target = 0, current = 0, rafOn = false;
 
   function applyProgress(p) {
     const globeOff = !!window.sunshineGlobeFailed;
-    const g = clamp01(p / 0.55);
+    const g = clamp01(p / GLOBE_END);
     if (window.sunshineGlobe) window.sunshineGlobe.update(g);
-    const fade = globeOff ? 1 : clamp01((p - 0.46) / 0.1);
+    const fade = globeOff ? 1 : clamp01((p - (GLOBE_END - 0.06)) / 0.08);
     mapEl.style.opacity = fade;
     globeEl.style.opacity = 1 - fade;
-    if (window.sunshineMap) window.sunshineMap.setProgress(globeOff ? p : clamp01((p - 0.5) / 0.45));
+    if (window.sunshineMap) window.sunshineMap.setProgress(globeOff ? clamp01(p / ARRIVE) : clamp01((p - GLOBE_END) / (ARRIVE - GLOBE_END)));
 
     let txt = '';
     for (const [t, s] of STAGES) if (p >= t) txt = s;
     if (label.textContent !== txt) label.textContent = txt;
 
-    const km = 36000 * Math.pow(1 - p, 3) + 0.3;
+    const km = 36000 * Math.pow(1 - clamp01(p / ARRIVE), 3) + 0.3;
     alt.textContent = 'ALT ' + (km >= 10 ? Math.round(km).toLocaleString('es-AR') + ' km' : Math.round(km * 1000).toLocaleString('es-AR') + ' m');
 
-    pin.classList.toggle('is-down', p > 0.93);
-    card.classList.toggle('is-on', p > 0.955);
+    // Spawn por partes durante el hold en la plaza
+    pin.classList.toggle('is-down', p >= ARRIVE);
+    card.classList.toggle('is-on', p > ARRIVE + 0.06);
+    card.classList.toggle('is-on2', p > ARRIVE + 0.14);
+    card.classList.toggle('is-on3', p > ARRIVE + 0.22);
   }
 
+  // El loop corre hasta alcanzar el scroll y recién ahí se apaga. No depende de si la
+  // sección está visible: si se apagara antes, quedaba trabado a mitad del descenso.
   function tick() {
-    if (!mapaVisible) { rafOn = false; return; }
-    const inMap = current > 0.5 && target > current;
+    const gap = target - current;
+    if (Math.abs(gap) < 0.0005) { current = target; applyProgress(current); rafOn = false; return; }
+    const inMap = current > GLOBE_END && gap > 0;
     const waiting = inMap && window.sunshineMap && window.sunshineMap.loading();
-    let step = (target - current) * (waiting ? 0.01 : 0.14);
-    if (inMap) step = Math.min(step, 0.0045); // descenso acotado: Leaflet mantiene tiles del nivel anterior
+    let step = gap * 0.14;
+    if (inMap) step = Math.min(step, waiting ? 0.0035 : 0.006); // descenso acotado: Leaflet mantiene tiles del nivel anterior
     current += step;
-    if (Math.abs(target - current) < 0.0005) current = target;
     applyProgress(current);
     requestAnimationFrame(tick);
   }
@@ -198,19 +208,14 @@
   if (!reduce) {
     ScrollTrigger.create({
       trigger: mapa, start: 'top top', end: 'bottom bottom',
-      onUpdate: self => { target = self.progress; if (!rafOn && mapaVisible) { rafOn = true; tick(); } },
-      onToggle: self => { mapaVisible = self.isActive; if (self.isActive && !rafOn) { rafOn = true; tick(); } },
+      onUpdate: self => { target = self.progress; if (!rafOn) { rafOn = true; tick(); } },
     });
-    new IntersectionObserver(([e]) => {
-      mapaVisible = e.isIntersecting;
-      if (mapaVisible && !rafOn) { rafOn = true; tick(); }
-    }).observe(mapa);
     applyProgress(0);
   } else {
     mapEl.style.opacity = 1; label.textContent = ''; alt.textContent = '';
   }
 
-  // ===== FINAL: WhatsApp + calendario =========================================
+  // ===== FINAL: WhatsApp + Google Calendar ===================================
   const msg = encodeURIComponent('¡Voy a los Sunshine Games! ☀️ ' + SITE_URL);
   const hasNumber = /^\d{8,15}$/.test(WHATSAPP_NUMBER);
   $('#waBtn').href = hasNumber ? `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}` : `https://wa.me/?text=${msg}`;
@@ -220,22 +225,6 @@
     + '&dates=' + EVENT.startUTC + '/' + EVENT.endUTC
     + '&location=' + encodeURIComponent(EVENT.location)
     + '&details=' + encodeURIComponent(EVENT.details);
-
-  $('#icsBtn').addEventListener('click', () => {
-    const esc = s => s.replace(/,/g, '\\,').replace(/;/g, '\\;');
-    const ics = [
-      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sunshine Games//ES', 'BEGIN:VEVENT',
-      'UID:sunshine-games-2026@jacowaco', 'DTSTAMP:20261027T000000Z',
-      'DTSTART:' + EVENT.startUTC, 'DTEND:' + EVENT.endUTC,
-      'SUMMARY:' + esc(EVENT.title), 'LOCATION:' + esc(EVENT.location),
-      'DESCRIPTION:' + esc(EVENT.details), 'URL:' + SITE_URL,
-      'END:VEVENT', 'END:VCALENDAR',
-    ].join('\r\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-    a.download = 'sunshine-games.ics';
-    document.body.appendChild(a); a.click(); a.remove();
-  });
 
   // Recalcular al cargar fuentes/imágenes
   window.addEventListener('load', () => ScrollTrigger.refresh());

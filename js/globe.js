@@ -58,7 +58,7 @@ function init() {
   addEventListener('resize', resize);
   update(0);
 
-  const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; if (running) loop(); }, { threshold: 0 });
+  const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; if (running) { lastT = performance.now(); loop(); } }, { threshold: 0 });
   io.observe(container);
 }
 
@@ -69,21 +69,34 @@ function resize() {
   renderer.render(scene, camera);
 }
 
+// `spin` acumula el giro libre mientras no scrolleás. La rotación por scroll parte de
+// START_Y + spin (donde quedó el globo), así no hay salto al empezar a scrollear.
+let spin = 0, cloudT = 0, lastT = performance.now();
+const TAU = Math.PI * 2;
+
+function applyRotation() {
+  const r = smooth(q);
+  const baseY = START_Y + spin;
+  let d = targetRotY - baseY;
+  d -= Math.floor(d / TAU) * TAU; // siempre avanza hacia adelante, menos de una vuelta
+  earth.rotation.y = baseY + d * r;
+  earth.rotation.x = START_X + (targetRotX - START_X) * r;
+}
+
 function update(p) {
   q = clamp01(p);
-  const r = smooth(q);
-  earth.rotation.y = START_Y + (targetRotY - START_Y) * r;
-  earth.rotation.x = START_X + (targetRotX - START_X) * r;
+  applyRotation();
   camera.position.z = CAM_FAR + (CAM_NEAR - CAM_FAR) * Math.pow(q, 1.7);
   stars.rotation.y = q * 0.4; stars.rotation.x = q * 0.15;
 }
 
-let t0 = performance.now();
 function loop() {
   if (!running) return;
-  const t = (performance.now() - t0) / 1000;
-  clouds.rotation.copy(earth.rotation); clouds.rotation.y += t * 0.012;
-  if (q < 0.02) earth.rotation.y = START_Y + t * 0.05; // gira solo mientras no scrolleás
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  cloudT += dt;
+  if (q < 0.02) { spin = (spin + dt * 0.05) % TAU; applyRotation(); } // gira solo mientras no scrolleás
+  clouds.rotation.copy(earth.rotation); clouds.rotation.y += cloudT * 0.012;
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }

@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Jacowaco's Sunshine Games</title>
-  <meta name="description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 4 equipos, 1 cinta, importantes premios*.">
+  <meta name="description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
   <meta name="theme-color" content="#FFC628">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Jacowaco's Sunshine Games · 7ª edición">
-  <meta property="og:description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 4 equipos, 1 cinta, importantes premios*.">
+  <meta property="og:description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
   <meta property="og:image" content="https://jacowaco.github.io/jacowaco-games/img/og.jpg">
   <meta property="og:url" content="https://jacowaco.github.io/jacowaco-games/">
   <meta name="twitter:card" content="summary_large_image">
@@ -29,11 +29,11 @@
   <div class="hero__sun" aria-hidden="true"></div>
   <div class="hero__rain" aria-hidden="true"></div>
   <div class="hero__content">
-    <p class="hero__tag" data-hero>Llueve hace semanas.<br>Este sábado sale el sol.</p>
     <h1 class="hero__title" data-hero><small>Jacowaco's</small>Sunshine<br>Games</h1>
     <p class="hero__meta" data-hero>
       <span>7ª edición</span><span>Sáb 31 oct</span><span>14:30</span>
     </p>
+    <p class="hero__tag" data-hero>Este sábado sale el sol</p>
   </div>
   <div class="hero__cintas" aria-hidden="true">
     <span class="cinta cinta--ninja"></span>
@@ -47,9 +47,8 @@
 <!-- 2. EQUIPOS -->
 <section class="section equipos" id="equipos">
   <div class="wrap">
-    <p class="section__kicker" data-reveal>El sistema</p>
-    <h2 class="section__title" data-reveal>4 equipos.<br><em>1 cinta.</em></h2>
-    <p class="section__sub" data-reveal>Llegás, te toca una cinta al azar, y con esa jugás hasta el final.</p>
+    <h2 class="section__title" data-reveal>Los <em>equipos</em></h2>
+    <p class="section__sub" data-reveal>Las cintas se sortean en la plaza.</p>
 
     <div class="equipos__grid" data-reveal-group>
       <article class="team team--ninja">
@@ -86,8 +85,7 @@
   <div class="podio__outer">
     <div class="podio__stage">
       <div class="podio__head">
-        <p class="section__kicker">Hall of fame</p>
-        <h2 class="section__title">El podio</h2>
+        <h2 class="section__title">Hall of fame</h2>
         <p class="section__sub">Un lugar acá se gana en la plaza.</p>
       </div>
       <div class="podio__track" id="podioTrack"></div>
@@ -96,7 +94,7 @@
   <div class="titulos wrap">
     <p class="section__kicker" data-reveal>Títulos</p>
     <div class="titulos__rows" id="titulosRows"></div>
-    <p class="titulos__q" data-reveal>Los Ninja no ganan desde 2021.<br>¿Siguen perdiendo este año?</p>
+    <p class="titulos__q" data-reveal>Los Ninja no ganan desde 2021.<br>¿Vuelven a perder este año?</p>
   </div>
 </section>
 
@@ -116,7 +114,7 @@
     <div class="marquee marquee--rev" id="marquee2"></div>
     <div class="marquee marquee--slow" id="marquee3"></div>
   </div>
-  <p class="tradicion__legends" data-reveal>Leyendas retiradas: Fluor · Hot · Frutilla · Dino</p>
+  <p class="tradicion__legends" data-reveal>Equipos retirados: Fluor · Hot · Frutilla · Dino</p>
 </section>
 
 <!-- 5. PREMIOS -->
@@ -137,7 +135,6 @@
     <div class="mapa__globe" id="globe"></div>
     <div class="mapa__map" id="map"></div>
     <div class="mapa__hud" aria-hidden="true">
-      <span>Sunshine GPS</span>
       <span id="mapAlt">ALT 36.000 km</span>
     </div>
     <div class="mapa__label" id="mapLabel">Planeta Tierra</div>
@@ -161,13 +158,18 @@
     <p class="final__time" data-reveal>14:30</p>
     <p class="final__warn" data-reveal>A las 18 nos echan. No llegues tarde.</p>
     <p class="final__place" data-reveal>Plaza Florencio Sánchez<br><span>Bosques de Palermo</span></p>
-    <p class="final__bring" data-reveal><strong>Traer:</strong> ropa deportiva cómoda + algo para tomar o picar (dulce o salado).</p>
+    <div class="bring" data-reveal>
+      <p class="section__kicker">Traer</p>
+      <ul class="bring__list">
+        <li><span class="bring__item">Ropa cómoda</span><span class="bring__note">para moverse</span></li>
+        <li><span class="bring__item">Algo para tomar o picar</span><span class="bring__note">dulce o salado</span></li>
+      </ul>
+    </div>
     <div class="actions" data-reveal>
       <a class="btn btn--wa" id="waBtn" href="#" target="_blank" rel="noopener">Avisame si venís</a>
       <a class="btn" href="https://maps.app.goo.gl/HXdKimXkS9MWiJNE6" target="_blank" rel="noopener">Cómo llegar</a>
-      <button class="btn btn--ghost" id="icsBtn" type="button">Agendar</button>
+      <a class="btn btn--ghost" id="gcalLink" href="#" target="_blank" rel="noopener">Agendar</a>
     </div>
-    <p class="final__gcal" data-reveal><a id="gcalLink" href="#" target="_blank" rel="noopener">o agregalo en Google Calendar</a></p>
   </div>
 </section>
 
