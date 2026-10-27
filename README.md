@@ -1,4 +1,4 @@
-# Jacowaco's Sunshine Games
+# Jacowaco's Games · Ray of Light edition
 
 Landing del cumple. Estática, sin build: `index.html` + `css/` + `js/` + `img/`.
 

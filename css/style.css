@@ -62,7 +62,10 @@ a{color:inherit}
 .hero__sun,.hero__slogan{position:absolute;top:var(--sun-top);right:var(--sun-right);width:var(--sun-w);aspect-ratio:1}
 .hero__sun{z-index:0;border-radius:50%;background:var(--yellow)}
 .hero__slogan{z-index:3;display:grid;place-items:center;pointer-events:none;text-align:center;font-family:var(--f-hand);font-size:clamp(26px,3vw,40px);line-height:1.05;color:var(--ink)}
-.hero__slogan span{display:block;max-width:8.5ch;transform:rotate(-4deg)}
+/* Slogan como cartel: condensada negra apilada, "Este sábado" chico arriba */
+.hero__slogan span{display:block;transform:rotate(-5deg);font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:2.1em;line-height:.82}
+.hero__slogan em,.hero__slogan b{display:block;font-style:normal;font-weight:inherit}
+.hero__slogan em{font-size:.55em;letter-spacing:.06em}
 .hero__sun::after{content:"";position:absolute;inset:-18%;border-radius:50%;
   background:radial-gradient(circle,var(--yellow) 32%,transparent 36%) 0 0/16px 16px;
   -webkit-mask:radial-gradient(closest-side,transparent 70%,#000 73%,transparent 100%);mask:radial-gradient(closest-side,transparent 70%,#000 73%,transparent 100%)}
@@ -88,13 +91,15 @@ a{color:inherit}
 }
 /* Estado inicial de la intro (GSAP la anima). Sin JS o con movimiento reducido, todo queda visible. */
 @media (prefers-reduced-motion: no-preference){
-  .js .hero__slogan,.js [data-hero]{opacity:0}
+  .js .hero__slogan em,.js .hero__slogan b,.js [data-hero],.js .hero__scroll{opacity:0}
   .js .hero__slogan{color:var(--paper)}
   .js .hero__sun{transform:translateY(115vmin)}
   .js .hero__cintas{visibility:hidden}
 }
 .hero__who{margin-bottom:.35em;margin-left:.1em}
 .hero__title{font-size:clamp(72px,min(25vw,17svh),300px);line-height:.8;color:var(--ink);text-shadow:.04em .028em 0 var(--pink)}
+.hero__l,.hero__ed{display:inline-block}
+.hero__ed{font-size:.3em;letter-spacing:.04em;margin-left:.15em;white-space:nowrap}
 .hero__meta{display:inline-flex;flex-wrap:wrap;gap:4px 0;margin-top:clamp(18px,3svh,30px);font-family:var(--f-type);font-weight:700;font-size:clamp(15px,2vw,20px);text-transform:uppercase;border-block:2px solid var(--ink);padding-block:7px 6px}
 .hero__meta span+span::before{content:"/";margin:0 .7em;opacity:.5}
 .hero__cintas{position:absolute;left:0;right:0;bottom:0;height:34svh;pointer-events:none;z-index:1}
@@ -133,7 +138,7 @@ a{color:inherit}
 .hof__outer{position:relative}
 .hof__stage{position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(18px,3.5svh,36px)}
 .hof__head{width:100%;padding-inline:var(--gutter)}
-.album{--album-pad:calc(var(--gutter) + clamp(16px,4vw,48px));display:flex;align-items:center;gap:clamp(18px,3vw,36px);width:max-content;will-change:transform;
+.album{--album-pad:calc(var(--gutter) + clamp(16px,4vw,48px));position:relative;display:flex;align-items:center;gap:clamp(18px,3vw,36px);width:max-content;will-change:transform;
   padding:14px var(--album-pad) 14px max(var(--album-pad),calc((100vw - var(--maxw)) / 2 + var(--gutter)))}
 .album .figu{flex:0 0 auto;width:clamp(220px,min(62vw,40svh),340px)}
 .hof__after{padding:clamp(24px,5svh,56px) var(--gutter) clamp(64px,10vh,120px)}
@@ -164,9 +169,16 @@ a{color:inherit}
 .tally__marks i:nth-child(2){transform:rotate(-3deg) translateY(1px);height:28px}
 .tally__marks i:nth-child(3){transform:rotate(6deg) translateY(-1px)}
 .tally__marks i:nth-child(4){transform:rotate(-2deg);height:31px}
-.tally__n{font-family:var(--f-type);font-weight:700;font-size:15px}
+.tally__n{font-family:var(--f-type);font-weight:700;font-size:15px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px 0}
+.tally__n span{white-space:nowrap}
+.tally__n span+span::before{content:"·";margin:0 .5em}
+@media (max-width:480px){
+  .tally__n{gap:2px 12px}
+  .tally__n span+span::before{content:none}
+}
 .titulos__q{font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:clamp(40px,6.4vw,76px);line-height:.9;text-wrap:balance}
-.titulos__q mark{color:inherit;background:linear-gradient(transparent 52%,var(--pink) 52% 92%,transparent 92%);padding:0 .06em}
+.titulos__q mark{color:inherit;background:linear-gradient(transparent 52%,var(--pink) 52% 92%,transparent 92%) no-repeat 0 0/var(--hl,100%) 100%;padding:0 .06em}
+.titulos__l1{display:inline-block}
 
 /* 4. TRADICIÓN ------------------------------------------------------------- */
 .head--split{align-items:flex-end}
@@ -184,6 +196,7 @@ a{color:inherit}
 .tira--rev{animation-direction:reverse;animation-duration:80s}
 .tira--slow{animation-duration:95s}
 @keyframes tira{to{transform:translateX(-50%)}}
+.js .tira:not(.is-on){animation-play-state:paused}
 .foto{position:relative;flex:none;background:var(--white);padding:6px 6px 18px;box-shadow:0 10px 16px -10px rgba(0,0,0,.5);transform:rotate(var(--r,0deg))}
 .foto::before{content:"";position:absolute;z-index:1;top:-10px;left:50%;width:34%;height:20px;margin-left:-17%;background:var(--tape);opacity:.9;transform:rotate(var(--t,-3deg))}
 .foto img{height:clamp(160px,24vw,280px);width:auto;max-width:none}
@@ -209,12 +222,25 @@ a{color:inherit}
 .redact:hover{transform:rotate(-1deg) scaleY(1.08)}
 .redact.is-shake{animation:shake .4s ease}
 @keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
-.planilla__code{font-family:var(--f-type);font-weight:700;font-size:28px;line-height:1;letter-spacing:.22em;font-variant-numeric:tabular-nums}
+/* El acertijo de la caja fuerte: número + operación + "dalo vuelta", resaltado con fibrón rosa */
+.planilla__acertijo{padding-block:10px;align-items:flex-start!important}
+.planilla__acertijo .planilla__n{padding-top:.35em}
+.planilla__expr{min-width:0}
+.planilla__code{display:flex;align-items:flex-start;gap:10px;font-family:var(--f-type);font-weight:700;font-size:clamp(17px,4.4vw,22px);line-height:1.5;font-variant-numeric:tabular-nums}
+.planilla__hl{background:linear-gradient(transparent 55%,var(--pink) 55% 92%,transparent 92%);-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:0 .15em}
+.planilla__hl > span{white-space:nowrap}
+.planilla__code b{font-weight:700}
+.planilla__flip{width:1.5em;height:1.5em;margin-top:-.05em;fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+@media (prefers-reduced-motion:no-preference){
+  .planilla__flip{animation:flip-hint 4s cubic-bezier(.6,0,.3,1) infinite}
+}
+@keyframes flip-hint{0%,70%{transform:rotate(0)}85%,100%{transform:rotate(360deg)}}
 .sello{position:absolute;right:6%;top:40%;font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:clamp(46px,7vw,72px);line-height:1;color:var(--pink);border:5px solid var(--pink);padding:4px 14px 0;transform:rotate(-14deg);opacity:.88;pointer-events:none}
 .planilla__note{font-family:var(--f-type);font-weight:700;font-size:15px;min-height:1.5em;margin-top:12px}
 
 /* 5. PREMIOS --------------------------------------------------------------- */
-.premios__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,3vw,40px);margin-top:clamp(36px,6vh,60px);max-width:900px}
+#premios{overflow-x:clip} /* las fotos, antes de pegarse, están agrandadas y torcidas */
+.premios__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,3vw,40px);margin-top:clamp(36px,6vh,60px);max-width:900px;margin-inline:auto}
 @media(max-width:560px){.premios__grid{grid-template-columns:1fr 1fr}.premio:nth-child(3){grid-column:1/-1;width:60%;justify-self:center}}
 .premio{position:relative;background:var(--white);padding:8px 8px 10px;box-shadow:0 12px 20px -12px rgba(0,0,0,.5);transform:rotate(-3deg)}
 .premio:nth-child(2){transform:rotate(2.4deg) translateY(14px)}
@@ -224,7 +250,7 @@ a{color:inherit}
 .premio figcaption{font-family:var(--f-hand);font-size:clamp(18px,2.6vw,26px);margin-top:8px;text-align:center}
 
 /* 6. MAPA ------------------------------------------------------------------ */
-.mapa{background:#000;color:#fff;height:720vh;position:relative}
+.mapa{background:#000;color:#fff;height:800vh;position:relative}
 .mapa__stage{position:sticky;top:0;height:100svh;overflow:hidden;background:#000}
 .mapa__globe,.mapa__map{position:absolute;inset:0}
 .mapa__globe canvas{display:block;width:100%;height:100%}
@@ -243,6 +269,16 @@ a{color:inherit}
 .mapa__card.is-on3 .btn{opacity:1;transform:none}
 .mapa__card-title{font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:clamp(34px,6vw,46px);line-height:.88;text-transform:uppercase}
 .mapa__card-sub{font-family:var(--f-type);font-weight:700;font-size:14px;margin:8px 0 14px}
+/* Polaroid de la plaza: cae sobre el mapa cuando llegamos */
+.mapa__foto{z-index:1002;position:absolute;right:max(var(--gutter),6vw);top:50%;width:clamp(150px,min(24vw,34svh),330px);background:var(--white);color:var(--ink);padding:8px 8px 6px;box-shadow:0 18px 30px -12px rgba(0,0,0,.7);opacity:0;transform:translateY(-40%) translateY(60px) rotate(9deg) scale(1.08);transition:opacity .45s,transform .6s cubic-bezier(.2,.9,.3,1.15);pointer-events:none}
+.mapa__foto.is-on{opacity:1;transform:translateY(-50%) rotate(3.5deg);transition-delay:.3s}
+.mapa__foto::before{content:"";position:absolute;z-index:1;top:-12px;left:50%;width:44%;height:24px;margin-left:-22%;background:var(--tape);opacity:.92;transform:rotate(-5deg)}
+.mapa__foto img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 45%}
+.mapa__foto figcaption{font-family:var(--f-hand);font-size:clamp(17px,min(2vw,2.8svh),26px);text-align:center;margin-top:6px}
+@media(max-width:700px){
+  .mapa__foto{top:calc(56px + env(safe-area-inset-top,0px));width:min(40vw,190px);transform:translateY(60px) rotate(9deg) scale(1.08)}
+  .mapa__foto.is-on{transform:rotate(3.5deg)}
+}
 .mapa__credit{z-index:1000;position:absolute;right:8px;bottom:4px;font-size:9px;opacity:.5;pointer-events:none}
 
 /* 7. LA DATA --------------------------------------------------------------- */
@@ -275,4 +311,8 @@ a{color:inherit}
   .mapa__pin{opacity:1}
   .mapa__card{opacity:1;transform:rotate(-1deg);pointer-events:auto}
   .mapa__card-sub,.mapa__card .btn{opacity:1;transform:none}
+  .mapa__foto{opacity:1;transform:translateY(-50%) rotate(3.5deg);transition:none}
+}
+@media (prefers-reduced-motion: reduce) and (max-width:700px){
+  .mapa__foto{transform:rotate(3.5deg)}
 }

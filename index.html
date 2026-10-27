@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Jacowaco's Sunshine Games</title>
+  <title>Jacowaco's Games · Ray of Light</title>
   <meta name="description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
   <meta name="theme-color" content="#86C8FF">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Jacowaco's Sunshine Games · 7ª edición">
+  <meta property="og:title" content="Jacowaco's Games · Ray of Light edition">
   <meta property="og:description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
   <meta property="og:image" content="https://jacowaco.github.io/jacowaco-games/img/og.jpg">
   <meta property="og:url" content="https://jacowaco.github.io/jacowaco-games/">
@@ -40,10 +40,10 @@
     <svg class="nube nube--2" viewBox="0 0 200 110"><use href="#nube" fill="#353e48" transform="translate(7 7)"/><use href="#nube" fill="#b6bfc8"/></svg>
     <svg class="nube nube--3" viewBox="0 0 200 110"><use href="#nube" fill="#353e48" transform="translate(7 7)"/><use href="#nube" fill="#8f9aa6"/></svg>
   </div>
-  <p class="hero__slogan"><span>Este sábado sale el sol</span></p>
+  <p class="hero__slogan"><span><em>Este sábado</em><b>sale el<br>sol</b></span></p>
   <div class="hero__content">
-    <p class="tape hero__who" data-hero>Jacowaco's</p>
-    <h1 class="hero__title" data-hero>Sunshine<br>Games</h1>
+    <p class="tape hero__who" data-hero>Jacowaco's Games</p>
+    <h1 class="hero__title"><span class="hero__l" data-hero>Ray of</span><br><span class="hero__l" data-hero>Light</span> <span class="hero__ed" data-hero>Edition</span></h1>
     <p class="hero__meta" data-hero>
       <span>7ª edición</span><span>Sáb 31.10</span><span>14:30 hs</span>
     </p>
@@ -98,7 +98,7 @@
         <p class="label">Títulos</p>
         <ul class="tally__rows" id="titulosRows"></ul>
       </div>
-      <p class="titulos__q">Los Ninja no ganan desde 2021.<br><mark>¿Vuelven a perder este año?</mark></p>
+      <p class="titulos__q"><span class="titulos__l1">Los Ninja no ganan desde 2021.</span><br><mark>¿Vuelven a perder este año?</mark></p>
     </div>
   </div>
 </section>
@@ -112,8 +112,8 @@
         <h2 class="title">Una tradición</h2>
       </div>
       <dl class="ficha">
-        <div><dt>Ediciones</dt><dd>7</dd></div>
         <div><dt>Primera vez</dt><dd>2018</dd></div>
+        <div><dt>Ediciones</dt><dd>7</dd></div>
         <div><dt>Momias envueltas</dt><dd>1</dd></div>
       </dl>
     </div>
@@ -146,7 +146,11 @@
         <li><span class="planilla__n">05</span><button class="redact" type="button" style="--w:80%" aria-label="Juego secreto"></button></li>
         <li><span class="planilla__n">06</span><button class="redact" type="button" style="--w:58%" aria-label="Juego secreto"></button></li>
         <li><span class="planilla__n">07</span><button class="redact" type="button" style="--w:46%" aria-label="Juego secreto"></button></li>
-        <li><span class="planilla__n">??</span><span class="planilla__code">311026</span></li>
+        <li class="planilla__acertijo"><span class="planilla__n">??</span>
+          <span class="planilla__code" role="img" aria-label="Dado vuelta: Math.ceil de EVENT_DATE por EDITIONS dividido NINJA_TITLES, menos 7 factorial, más 0xFF, más TSHIRT_VERSION, más TRIPS_TO_BRASIL">
+            <svg class="planilla__flip" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg><span class="planilla__expr"><span class="planilla__hl"><span>(&nbsp;Math.ceil(<b>EVENT_DATE</b></span> <span>×&nbsp;EDITIONS</span> <span>÷&nbsp;NINJA_TITLES)</span> <span>−&nbsp;7!</span> <span>+&nbsp;0xFF</span> <span>+&nbsp;TSHIRT_VERSION</span> <span>+&nbsp;TRIPS_TO_BRASIL&nbsp;)</span></span></span>
+          </span>
+        </li>
       </ol>
       <span class="sello" aria-hidden="true">Secreto</span>
       <p class="planilla__note" id="planillaNote" aria-live="polite"></p>
@@ -178,6 +182,10 @@
     <div class="mapa__pin" id="mapPin" aria-hidden="true">
       <svg viewBox="0 0 48 64" width="48" height="64"><path d="M24 0C10.7 0 0 10.7 0 24c0 18 24 40 24 40s24-22 24-40C48 10.7 37.3 0 24 0z" fill="#FF4D9D" stroke="#191816" stroke-width="3"/><circle cx="24" cy="24" r="9" fill="#F3F2EC" stroke="#191816" stroke-width="3"/></svg>
     </div>
+    <figure class="mapa__foto" id="mapFoto">
+      <img src="img/plaza.webp" alt="La Plaza Florencio Sánchez: pasto, árboles enormes y sol" width="540" height="832" loading="lazy">
+      <figcaption>Así de linda es</figcaption>
+    </figure>
     <div class="mapa__card" id="mapCard">
       <p class="mapa__card-title">Plaza Florencio Sánchez</p>
       <p class="mapa__card-sub">Bosques de Palermo · cerca del Lago de Regatas</p>
@@ -204,7 +212,7 @@
         <span class="entrada__k">Dónde</span>
         <div class="entrada__v">
           <p class="final__place">Plaza Florencio Sánchez</p>
-          <p class="final__sub">Bosques de Palermo</p>
+          <p class="final__sub">Bosques de Palermo · cerca del Lago de Regatas</p>
         </div>
       </div>
       <div class="entrada__row">
@@ -225,7 +233,7 @@
   </div>
 </section>
 
-<footer class="footer">Jacowaco's Sunshine Games · 7ª edición · 2018 → 2026</footer>
+<footer class="footer">Jacowaco's Games · Ray of Light edition · 2018 → 2026</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>

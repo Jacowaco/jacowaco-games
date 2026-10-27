@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Flyer · Jacowaco's Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=block" rel="stylesheet">
+<style>
+  /* Flyer 1080x1350 para WhatsApp. Misma estética que la web: cielo, sol con trama, cinta de papel, cintas de equipo. */
+  :root{
+    --paper:#F3F2EC; --white:#FFFEFA; --ink:#191816; --yellow:#FFD23C; --pink:#FF4D9D; --sky:#86C8FF; --tape:#E9DDB6;
+    --f-display:'Archivo',Impact,sans-serif; --f-type:'Courier Prime',monospace; --f-hand:'Permanent Marker',cursive;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .42 0 0 0 -.19'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1080px;height:1350px;overflow:hidden}
+  body{background:var(--sky);color:var(--ink);font-family:var(--f-display);-webkit-font-smoothing:antialiased}
+  .flyer{position:relative;width:1080px;height:1350px;overflow:hidden;background:var(--grain),var(--sky)}
+
+  /* Sol con trama de puntos y slogan */
+  .sun,.slogan{position:absolute;top:-90px;right:-120px;width:580px;aspect-ratio:1}
+  .sun{border-radius:50%;background:var(--yellow)}
+  .sun::after{content:"";position:absolute;inset:-18%;border-radius:50%;
+    background:radial-gradient(circle,var(--yellow) 32%,transparent 36%) 0 0/18px 18px;
+    -webkit-mask:radial-gradient(closest-side,transparent 70%,#000 73%,transparent 100%)}
+  .slogan{display:grid;place-items:center;text-align:center}
+  .slogan span{display:block;transform:translate(-50px,40px) rotate(-5deg);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:104px;line-height:.82}
+  .slogan em{display:block;font-style:normal;font-size:.55em;letter-spacing:.06em}
+
+  /* Título */
+  .head{position:absolute;left:64px;top:120px;z-index:2}
+  .tape{display:inline-block;background:var(--tape);font-family:var(--f-hand);font-size:44px;line-height:1;padding:.32em .8em .22em;transform:rotate(-3deg);margin:0 0 .3em .1em;
+    clip-path:polygon(0 6%,3% 0,7% 8%,11% 1%,100% 0,97% 12%,100% 24%,96% 38%,100% 52%,97% 66%,100% 80%,97% 92%,100% 100%,0 100%,3% 86%,0 72%,3% 58%,0 44%,3% 30%,0 18%)}
+  h1{font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:200px;line-height:.8;letter-spacing:-.005em;text-shadow:.04em .028em 0 var(--pink)}
+  h1 .ed{display:inline-block;font-size:.3em;letter-spacing:.04em;margin-left:.15em}
+  .meta{display:inline-flex;margin-top:26px;font-family:var(--f-type);font-weight:700;font-size:30px;text-transform:uppercase;border-block:3px solid var(--ink);padding-block:9px 8px}
+  .meta span+span::before{content:"/";margin:0 .6em;opacity:.5}
+
+  /* Planilla con la data */
+  .entrada{position:absolute;left:52px;top:690px;width:650px;z-index:3;background:var(--white);border:3px solid var(--ink);transform:rotate(-1deg);box-shadow:0 18px 30px -16px rgba(0,0,0,.45)}
+  .row{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:18px 24px}
+  .row+.row{border-top:3px dashed var(--ink)}
+  .k{font-family:var(--f-type);font-weight:700;font-size:22px;text-transform:uppercase;padding-top:.45em}
+  .big{font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:50px;line-height:.9}
+  .time{font-stretch:62%;font-weight:900;font-size:120px;line-height:.82;margin-top:4px;text-shadow:.035em .025em 0 var(--pink)}
+  .small{font-family:var(--f-type);font-weight:700;font-size:23px;margin-top:6px}
+
+  /* Polaroid de la plaza */
+  .foto{position:absolute;right:56px;top:680px;width:320px;z-index:4;background:var(--white);padding:12px 12px 8px;transform:rotate(4deg);box-shadow:0 22px 34px -14px rgba(0,0,0,.55)}
+  .foto::before{content:"";position:absolute;top:-16px;left:50%;width:46%;height:32px;margin-left:-23%;background:var(--tape);opacity:.93;transform:rotate(-5deg)}
+  .foto img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;object-position:50% 45%}
+  .foto p{font-family:var(--f-hand);font-size:23px;text-align:center;margin-top:8px;white-space:nowrap}
+
+  /* Cintas de equipo cruzando abajo */
+  .cintas{position:absolute;left:0;right:0;bottom:0;height:250px;z-index:1}
+  .cinta{--h:58px;position:absolute;left:-10%;width:120%;height:var(--h);filter:drop-shadow(0 3px 0 rgba(0,0,0,.18))}
+  .cinta:nth-child(1){top:20px;transform:rotate(-3deg)}
+  .cinta:nth-child(2){top:78px;transform:rotate(2.2deg)}
+  .cinta:nth-child(3){top:136px;transform:rotate(-2.4deg)}
+  .cinta:nth-child(4){top:190px;transform:rotate(1.8deg)}
+  .ninja{background:linear-gradient(180deg,#2b2b2b 0 12%,#141414 12% 88%,#2b2b2b 88%)}
+  .gay{background:linear-gradient(180deg,#e40303 0 16.7%,#ff8c00 0 33.4%,#ffed00 0 50%,#008026 0 66.7%,#24408e 0 83.4%,#732982 0)}
+  .patrio{background:radial-gradient(circle closest-side at 50% 50%,#F6B40E 0 62%,transparent 68%),linear-gradient(180deg,#74ACDF 0 34%,#fff 0 66%,#74ACDF 0)}
+  .pinup{background:radial-gradient(circle at 50% 50%,#111 calc(var(--h)*.17),transparent calc(var(--h)*.17 + 1px)) 0 0/calc(var(--h)*.6) var(--h) repeat-x,#FFD400}
+
+</style>
+</head>
+<body>
+<div class="flyer">
+  <div class="sun"></div>
+  <p class="slogan"><span><em>Este sábado</em>sale el<br>sol</span></p>
+
+  <div class="head">
+    <p class="tape">Jacowaco's Games</p>
+    <h1>Ray of<br>Light <span class="ed">Edition</span></h1>
+    <p class="meta"><span>7ª edición</span><span>2018 → 2026</span></p>
+  </div>
+
+  <div class="entrada">
+    <div class="row">
+      <span class="k">Cuándo</span>
+      <div><p class="big">Sábado 31 de octubre</p><p class="time">14:30</p><p class="small">A las 18 nos echan.</p></div>
+    </div>
+    <div class="row">
+      <span class="k">Dónde</span>
+      <div><p class="big">Plaza Florencio Sánchez</p><p class="small">Bosques de Palermo<br>Cerca del Lago de Regatas</p></div>
+    </div>
+    <div class="row">
+      <span class="k">Traer</span>
+      <div><p class="small" style="margin-top:.3em">Ropa cómoda y algo para picar</p></div>
+    </div>
+  </div>
+
+  <figure class="foto">
+    <img src="../img/plaza.webp" alt="">
+    <p>Así de linda es la plaza</p>
+  </figure>
+
+  <div class="cintas">
+    <span class="cinta ninja"></span>
+    <span class="cinta gay"></span>
+    <span class="cinta patrio"></span>
+    <span class="cinta pinup"></span>
+  </div>
+</div>
+</body>
+</html>

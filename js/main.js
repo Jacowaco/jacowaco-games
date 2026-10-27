@@ -1,4 +1,4 @@
-/* Jacowaco's Sunshine Games — animaciones y datos */
+/* Jacowaco's Games, Ray of Light edition — animaciones y datos */
 (function () {
   'use strict';
 
@@ -6,7 +6,7 @@
   const WHATSAPP_NUMBER = '5491133685915'; // ej: '5491112345678' (con código de país, sin +)
   const SITE_URL = 'https://jacowaco.github.io/jacowaco-games/';
   const EVENT = {
-    title: "Jacowaco's Sunshine Games",
+    title: "Jacowaco's Games · Ray of Light",
     startUTC: '20261031T173000Z', // 14:30 ART
     endUTC: '20261031T210000Z',   // 18:00 ART
     location: 'Plaza Florencio Sánchez, Bosques de Palermo, Buenos Aires',
@@ -59,12 +59,14 @@
       <article class="figu figu--next">
         <p class="figu__year">2026</p>
         <p class="figu__hand">Tu foto acá</p>
-        <p class="figu__meta">Sáb 31 oct · Plaza</p>
       </article>`;
 
-  // Títulos contados con palitos
-  const counts = {};
-  HISTORIAL.forEach(h => { counts[h.campeon] = (counts[h.campeon] || 0) + 1; });
+  // Títulos contados con palitos + los años en que ganó cada uno
+  const counts = {}, years = {};
+  HISTORIAL.forEach(h => {
+    counts[h.campeon] = (counts[h.campeon] || 0) + 1;
+    (years[h.campeon] = years[h.campeon] || []).push(h.year);
+  });
   $('#titulosRows').innerHTML = Object.keys(EQUIPOS)
     .sort((a, b) => (counts[b] || 0) - (counts[a] || 0))
     .map(k => {
@@ -73,46 +75,80 @@
       <li>
         <span class="tally__team">${EQUIPOS[k].nombre}</span>
         <span class="tally__marks" aria-hidden="true">${'<i></i>'.repeat(n)}</span>
-        <span class="tally__n">${n} ${n === 1 ? 'título' : 'títulos'}</span>
+        <span class="tally__n">${(years[k] || []).map(y => `<span>${y}</span>`).join('')}</span>
       </li>`;
     }).join('');
 
   // Tiras de fotos pegadas con cinta (duplicadas para que el loop no tenga corte)
   const per = Math.ceil(FOTOS.length / 3);
   [FOTOS.slice(0, per), FOTOS.slice(per, per * 2), FOTOS.slice(per * 2)].forEach((list, i) => {
-    const html = list.map(f => `<figure class="foto"><img src="img/${f}-s.webp" alt="" loading="lazy"></figure>`).join('');
+    // la momia (foto2018b) carga sí o sí: es el remate de "Momias envueltas"
+    const html = list.map(f => `<figure class="foto"><img src="img/${f}-s.webp" alt="" loading="${f === 'foto2018b' ? 'eager' : 'lazy'}"></figure>`).join('');
     $('#tira' + (i + 1)).innerHTML = html + html;
   });
+  // Las tiras arrancan quietas y empiezan a correr recién cuando entran en pantalla,
+  // así la momia (2ª foto de la primera tira) está a la vista la primera vez que llegás.
+  const tiraIO = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('is-on'); tiraIO.unobserve(e.target); }
+  }), { rootMargin: '0px 0px -15% 0px' });
+  document.querySelectorAll('.tira').forEach(t => tiraIO.observe(t));
 
   // ===== HERO ================================================================
   // Orden: slogan sobre la lluvia → se despeja y sale el sol detrás → título y datos → cintas
   if (!reduce) {
+    // El slogan entra sobre la lluvia; mientras termina de aparecer se despeja y sube el sol
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.fromTo('.hero__slogan', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9 }, 0.3)
-      .to('.nube--1', { xPercent: -130, duration: 1.8, ease: 'power2.in' }, 1.4)
-      .to('.nube--2', { xPercent: 130, duration: 1.8, ease: 'power2.in' }, 1.5)
-      .to('.nube--3', { yPercent: -140, duration: 1.6, ease: 'power2.in' }, 1.6)
-      .to('.hero__rain', { autoAlpha: 0, duration: 1.6, ease: 'power1.inOut' }, 1.6)
-      .set('.hero__clouds', { autoAlpha: 0 }, 3.4)
-      .to('.hero__sun', { y: 0, duration: 1.9 }, 1.8)
-      .to('.hero__slogan', { color: '#191816', duration: 1 }, 2.0)
-      .fromTo('[data-hero]', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.15 }, 3.1)
-      .set('.hero__cintas', { visibility: 'visible' }, 3.6)
-      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 3.6);
+    // primero "Este sábado", después "sale el sol" (justo cuando empieza a despejar)
+    tl.fromTo('.hero__slogan em', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }, 0.3)
+      .fromTo('.hero__slogan b', { opacity: 0, y: 24, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.6)' }, 0.95)
+      .to('.nube--1', { xPercent: -130, duration: 1.3, ease: 'power2.in' }, 1.0)
+      .to('.nube--2', { xPercent: 130, duration: 1.3, ease: 'power2.in' }, 1.05)
+      .to('.nube--3', { yPercent: -140, duration: 1.2, ease: 'power2.in' }, 1.1)
+      .to('.hero__rain', { autoAlpha: 0, duration: 1.1, ease: 'power1.inOut' }, 1.0)
+      .set('.hero__clouds', { autoAlpha: 0 }, 2.4)
+      .to('.hero__sun', { y: 0, duration: 1.6 }, 1.1)
+      .to('.hero__slogan', { color: '#191816', duration: 0.8 }, 1.4)
+      // de a uno: cinta, "Ray of", "Light", sello "Edition", datos
+      .fromTo('.hero__who', { y: 30, opacity: 0, rotate: -9 }, { y: 0, opacity: 1, rotate: -3, duration: 0.7 }, 2.3)
+      .fromTo('.hero__l', { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.45 }, 2.75)
+      .fromTo('.hero__ed', { scale: 2.4, opacity: 0, rotate: -12 }, { scale: 1, opacity: 1, rotate: 0, duration: 0.45, ease: 'back.out(2.5)' }, 3.75)
+      .fromTo('.hero__meta', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, 4.25)
+      .set('.hero__cintas', { visibility: 'visible' }, 4.7)
+      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 4.7)
+      .fromTo('.hero__scroll', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6 }, 5.9);
     gsap.to('.hero__content', {
       yPercent: -25, opacity: 0.2, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+    });
+
+    // ===== PREMIOS: las fotos se pegan de a una (caen torcidas y se acomodan con la cinta)
+    gsap.from('.premio', {
+      y: '-=90', opacity: 0, scale: 1.15, rotation: (i) => (i % 2 ? '+=14' : '-=14'),
+      duration: 0.55, stagger: 0.38, ease: 'back.out(1.7)',
+      scrollTrigger: { trigger: '.premios__grid', start: 'top 72%', once: true },
+    });
+
+    // ===== EQUIPOS: entran de a uno (la cinta se desenrolla, después cae el nombre)
+    const teamsTl = gsap.timeline({
+      scrollTrigger: { trigger: '.equipos__grid', start: 'top 82%', once: true },
+    });
+    gsap.utils.toArray('.team').forEach((team, i) => {
+      const left = i % 2 === 0;
+      const at = i * 0.35;
+      teamsTl
+        .from(team.querySelector('.cinta'), {
+          scaleX: 0, transformOrigin: left ? '0% 50%' : '100% 50%', duration: 0.6, ease: 'power3.out',
+        }, at)
+        .from(team.querySelector('.team__name'), {
+          y: 36, opacity: 0, rotate: left ? -5 : 5, duration: 0.55, ease: 'back.out(2)',
+        }, at + 0.3);
     });
   }
 
   // ===== RULETA ==============================================================
   const order = ['ninja', 'gay', 'patrio', 'pinup'];
   const rName = $('#ruletaName'), rCinta = $('#ruletaCinta'), rNote = $('#ruletaNote'), rBtn = $('#ruletaBtn');
-  const NOTAS = [
-    'Mentira. El sorteo real es en la plaza.',
-    'No te ilusiones, en la plaza se sortea de nuevo.',
-    'Las cintas se sortean en la plaza.',
-  ];
+  const NOTA = 'Mentira. El sorteo real es en la plaza.';
   let spinning = false;
   function show(k) { rName.textContent = EQUIPOS[k].nombre; rCinta.className = 'cinta cinta--' + k; }
   rBtn.addEventListener('click', () => {
@@ -123,7 +159,7 @@
       i = (i + 1) % 4; show(order[i]); steps--;
       if (steps > 0) { delay *= 1.2; setTimeout(tick, delay); return; }
       spinning = false; rBtn.textContent = 'Otra vez';
-      rNote.textContent = NOTAS[Math.floor(Math.random() * NOTAS.length)];
+      rNote.textContent = NOTA;
       if (!reduce) gsap.fromTo('#ruletaSlot', { rotation: -3 }, { rotation: -1, duration: 0.6, ease: 'elastic.out(1,0.4)' });
     };
     tick();
@@ -139,25 +175,101 @@
 
   // ===== HALL OF FAME: la sección se frena y el álbum pasa de costado ==========
   const album = $('#podioTrack'), hofOuter = $('.hof__outer');
-  // clientWidth descuenta la barra de scroll; innerWidth no, y se comía el margen derecho
-  function hofExtra() { return Math.max(0, album.offsetWidth - document.documentElement.clientWidth); }
-  function hofLayout() { hofOuter.style.height = (window.innerHeight + hofExtra()) + 'px'; }
+  // El recorrido termina con la figurita 2026 centrada en pantalla.
+  // clientWidth descuenta la barra de scroll; innerWidth no.
+  const hofLast = album.querySelector('.figu--next');
+  // Se mide con offsetLeft/offsetWidth (layout puro) para que el estampado, que escala
+  // las figuritas, no altere la cuenta.
+  // El álbum arranca con la primera figurita en el centro de la pantalla y termina con la 2026
+  // en el centro: cada una se estampa al llegar al medio y el scroll se la lleva a la izquierda.
+  const figus = gsap.utils.toArray('.album .figu');
+  const vwNow = () => document.documentElement.clientWidth;
+  const albumRestLeft = () => album.getBoundingClientRect().left - gsap.getProperty(album, 'x');
+  const centerOf = f => f.offsetLeft + f.offsetWidth / 2;                 // centro dentro del álbum
+  const hofStartX = () => vwNow() / 2 - (albumRestLeft() + centerOf(figus[0]));
+  const hofEndX = () => vwNow() / 2 - (albumRestLeft() + centerOf(hofLast));
+  function hofLayout() { hofOuter.style.height = (window.innerHeight + Math.max(0, hofStartX() - hofEndX())) + 'px'; }
   hofLayout();
   ScrollTrigger.addEventListener('refreshInit', hofLayout);
-  gsap.to(album, {
-    x: () => -hofExtra(), ease: 'none',
+  const stampQueue = [];
+  let stampBusy = false, stampNextIdx = 0;
+  gsap.fromTo(album, { x: () => hofStartX() }, {
+    x: () => hofEndX(), ease: 'none',
     scrollTrigger: { trigger: hofOuter, start: 'top top', end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
+    onUpdate: () => stampCheck(),
   });
+
+  // Figuritas estampadas de a una: cada una cae grande y torcida en el centro de la pantalla,
+  // pega contra el álbum y lo sacude. Si scrolleás rápido, se encolan y se estampan más rápido.
+  function stampCheck() {
+    if (reduce || stampNextIdx >= figus.length) return;
+    const vw = vwNow(), vh = window.innerHeight;
+    if (hofOuter.getBoundingClientRect().top > vh * 0.08) return;      // la sección todavía no se frenó
+    const left = album.getBoundingClientRect().left;                     // incluye el desplazamiento actual
+    while (stampNextIdx < figus.length) {
+      const f = figus[stampNextIdx];
+      // dispara un poco antes del medio (más cuanto más ancha es la figurita respecto de la pantalla),
+      // así termina de pegar justo en el centro mientras el álbum sigue corriendo
+      if (left + centerOf(f) > vw * 0.5 + f.offsetWidth * 0.25) break;
+      stampQueue.push(f); stampNextIdx++;
+    }
+    if (!stampBusy) stampNext();
+  }
+  function stampNext() {
+    const f = stampQueue.shift();
+    if (!f) { stampBusy = false; return; }
+    stampBusy = true;
+    const r = parseFloat(getComputedStyle(f).getPropertyValue('--r')) || 0;
+    const hurry = stampQueue.length > 1;                                // hay cola: más rápido
+    const side = figus.indexOf(f) % 2 ? 1 : -1;
+    // Apenas pega, arranca la siguiente; la sacudida del álbum corre aparte.
+    gsap.fromTo(f, { opacity: 0, scale: 1.7, rotation: r + side * 12, y: -30 }, {
+      opacity: 1, scale: 1, rotation: r, y: 0, duration: hurry ? 0.16 : 0.26, ease: 'power4.in',
+      onComplete: () => {
+        gsap.timeline().to(album, { y: 7, duration: 0.05, ease: 'power1.out' })
+          .to(album, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.35)' });
+        gsap.delayedCall(hurry ? 0.02 : 0.06, stampNext);
+      },
+    });
+  }
+  // Planilla de títulos: la hoja cae pegada, cada fila se escribe (nombre, palitos uno por uno,
+  // años) y después la pregunta, con el resaltador rosa pasando por debajo.
+  if (!reduce) {
+    const tt = gsap.timeline({ scrollTrigger: { trigger: '.titulos', start: 'top 72%', once: true } });
+    tt.from('.tally', { y: -70, opacity: 0, rotation: -7, duration: 0.4, ease: 'back.out(1.6)' });
+    gsap.utils.toArray('#titulosRows li').forEach((li, i) => {
+      const at = 0.25 + i * 0.18;
+      tt.from(li.querySelector('.tally__team'), { x: -18, opacity: 0, duration: 0.22, ease: 'power2.out' }, at)
+        .from(li.querySelectorAll('.tally__marks i'), { scaleY: 0, transformOrigin: '50% 100%', duration: 0.07, stagger: 0.06, ease: 'power2.in' }, at + 0.08)
+        .from(li.querySelectorAll('.tally__n span'), { opacity: 0, y: 6, duration: 0.18, stagger: 0.04 }, at + 0.12);
+    });
+    // La pregunta arranca mientras se terminan de escribir las últimas filas
+    const qAt = 0.25 + gsap.utils.toArray('#titulosRows li').length * 0.18;
+    tt.from('.titulos__l1', { y: 40, opacity: 0, duration: 0.4, ease: 'power3.out' }, qAt)
+      .from('.titulos__q mark', { opacity: 0, duration: 0.3, ease: 'power3.out' }, qAt + 0.25)
+      .fromTo('.titulos__q mark', { '--hl': '0%' }, { '--hl': '100%', duration: 0.5, ease: 'power2.inOut' }, qAt + 0.45)
+      .to('.titulos__q', { rotation: -1.5, duration: 0.07, yoyo: true, repeat: 3, ease: 'power1.inOut' }, qAt + 0.95);
+  }
+
+  if (!reduce) {
+    gsap.set(figus, { opacity: 0 });
+    ScrollTrigger.create({ trigger: hofOuter, start: 'top 8%', end: 'bottom top', onUpdate: stampCheck, onEnter: stampCheck });
+  }
 
   // ===== MAPA: coreografía ===================================================
   const mapa = $('.mapa'), globeEl = $('#globe'), mapEl = $('#map');
-  const label = $('#mapLabel'), alt = $('#mapAlt'), pin = $('#mapPin'), card = $('#mapCard');
+  const label = $('#mapLabel'), alt = $('#mapAlt'), pin = $('#mapPin'), card = $('#mapCard'), foto = $('#mapFoto');
   // Recorrido (p = progreso de scroll en la sección):
   //   0 → GLOBE_END  globo girando y acercándose
   //   GLOBE_END → ARRIVE  descenso satelital hasta la plaza
   //   ARRIVE → 1  la plaza queda quieta y la info aparece por partes (pin, nombre, ubicación, botón)
-  const GLOBE_END = 0.4, ARRIVE = 0.68;
-  const STAGES = [[0, 'Planeta Tierra'], [0.22, 'Sudamérica'], [0.36, 'Argentina'], [0.47, 'Buenos Aires'], [0.58, 'Bosques de Palermo'], [ARRIVE, '']];
+  // La sección mide 800vh (700vh de recorrido). K convierte las marcas pensadas para 620vh de
+  // recorrido, así el descenso va a la misma velocidad y lo que sobra queda de hold en la plaza.
+  const K = 620 / 700;
+  const GLOBE_END = 0.4 * K, ARRIVE = 0.68 * K;
+  const STAGES = [[0, 'Planeta Tierra'], [0.22 * K, 'Sudamérica'], [0.36 * K, 'Argentina'], [0.47 * K, 'Buenos Aires'], [0.58 * K, 'Bosques de Palermo'], [ARRIVE, '']];
+  // Pasos en la plaza, cada ~25vh de scroll: tarjeta, ubicación, botón, foto. Después, hold largo.
+  const STEP = 25 / 700;
   let target = 0, current = 0, rafOn = false;
 
   function applyProgress(p) {
@@ -178,9 +290,10 @@
 
     // Spawn por partes durante el hold en la plaza
     pin.classList.toggle('is-down', p >= ARRIVE);
-    card.classList.toggle('is-on', p > ARRIVE + 0.06);
-    card.classList.toggle('is-on2', p > ARRIVE + 0.14);
-    card.classList.toggle('is-on3', p > ARRIVE + 0.22);
+    card.classList.toggle('is-on', p > ARRIVE + STEP);
+    card.classList.toggle('is-on2', p > ARRIVE + STEP * 2);
+    card.classList.toggle('is-on3', p > ARRIVE + STEP * 3);
+    foto.classList.toggle('is-on', p > ARRIVE + STEP * 4); // después del botón de Maps
   }
 
   // El loop corre hasta alcanzar el scroll y recién ahí se apaga. No depende de si la
@@ -208,7 +321,7 @@
   }
 
   // ===== FINAL: WhatsApp + Google Calendar ===================================
-  const msg = encodeURIComponent('¡Voy a los Sunshine Games! ☀️ ' + SITE_URL);
+  const msg = encodeURIComponent('¡Voy a los Jacowaco\'s Games! ☀️ ' + SITE_URL);
   const hasNumber = /^\d{8,15}$/.test(WHATSAPP_NUMBER);
   $('#waBtn').href = hasNumber ? `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}` : `https://wa.me/?text=${msg}`;
 
