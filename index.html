@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jacowaco's Sunshine Games</title>
+  <meta name="description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 4 equipos, 1 cinta, importantes premios*.">
+  <meta name="theme-color" content="#FFC628">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Jacowaco's Sunshine Games · 7ª edición">
+  <meta property="og:description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 4 equipos, 1 cinta, importantes premios*.">
+  <meta property="og:image" content="https://jacowaco.github.io/jacowaco-games/img/og.jpg">
+  <meta property="og:url" content="https://jacowaco.github.io/jacowaco-games/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>document.documentElement.classList.add("js")</script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head>
+<body>
+
+<!-- 1. HERO -->
+<header class="hero" id="top">
+  <div class="hero__rays" aria-hidden="true"></div>
+  <div class="hero__sun" aria-hidden="true"></div>
+  <div class="hero__content">
+    <p class="hero__tag" data-hero>Este sábado sale el sol</p>
+    <h1 class="hero__title" data-hero><small>Jacowaco's</small>Sunshine<br>Games</h1>
+    <p class="hero__meta" data-hero>
+      <span>7ª edición</span><span>Sáb 31 oct</span><span>14:30</span>
+    </p>
+  </div>
+  <div class="hero__cintas" aria-hidden="true">
+    <span class="cinta cinta--ninja"></span>
+    <span class="cinta cinta--gay"></span>
+    <span class="cinta cinta--patrio"></span>
+    <span class="cinta cinta--pinup"></span>
+  </div>
+  <a class="hero__scroll" href="#equipos" aria-label="Scrolleá">↓</a>
+</header>
+
+<!-- 2. EQUIPOS -->
+<section class="section equipos" id="equipos">
+  <div class="wrap">
+    <p class="section__kicker" data-reveal>El sistema</p>
+    <h2 class="section__title" data-reveal>4 equipos.<br>1 cinta.<br><em>Vos no elegís.</em></h2>
+    <p class="section__sub" data-reveal>Llegás, te toca una cinta al azar, y con esa jugás hasta el final.</p>
+
+    <div class="equipos__grid" data-reveal-group>
+      <article class="team team--ninja">
+        <span class="cinta cinta--ninja"></span>
+        <h3 class="team__name">Ninja</h3>
+        <p class="team__sub">Cinta negra</p>
+      </article>
+      <article class="team team--gay">
+        <span class="cinta cinta--gay"></span>
+        <h3 class="team__name">Gay</h3>
+        <p class="team__sub">Cinta arcoíris</p>
+      </article>
+      <article class="team team--patrio">
+        <span class="cinta cinta--patrio"></span>
+        <h3 class="team__name">Patrio</h3>
+        <p class="team__sub">Cinta argentina</p>
+      </article>
+      <article class="team team--pinup">
+        <span class="cinta cinta--pinup"></span>
+        <h3 class="team__name">Pinup</h3>
+        <p class="team__sub">Amarilla a lunares</p>
+      </article>
+    </div>
+
+    <div class="ruleta" data-reveal>
+      <div class="ruleta__slot" id="ruletaSlot" aria-live="polite">
+        <span class="cinta cinta--ninja" id="ruletaCinta"></span>
+        <span class="ruleta__name" id="ruletaName">¿?</span>
+      </div>
+      <button class="btn btn--sun" id="ruletaBtn" type="button">¿Qué cinta te toca?</button>
+      <p class="ruleta__note" id="ruletaNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. PODIO -->
+<section class="podio" id="podio">
+  <div class="podio__outer">
+    <div class="podio__stage">
+      <div class="podio__head">
+        <p class="section__kicker">Hall of fame</p>
+        <h2 class="section__title">El podio</h2>
+        <p class="section__sub">Un lugar acá se gana en la plaza.</p>
+      </div>
+      <div class="podio__track" id="podioTrack"></div>
+    </div>
+  </div>
+  <div class="titulos wrap">
+    <p class="section__kicker" data-reveal>Títulos</p>
+    <div class="titulos__rows" id="titulosRows"></div>
+    <p class="titulos__q" data-reveal>¿Alguien frena a los Ninja?</p>
+  </div>
+</section>
+
+<!-- 4. TRADICIÓN -->
+<section class="section tradicion" id="tradicion">
+  <div class="wrap">
+    <p class="section__kicker" data-reveal>Desde 2018</p>
+    <h2 class="section__title" data-reveal>Una tradición</h2>
+    <div class="stats" data-reveal-group>
+      <div class="stat"><span class="stat__n" data-count="7">0</span><span class="stat__l">ediciones</span></div>
+      <div class="stat"><span class="stat__n" data-count="2018" data-from="1990">0</span><span class="stat__l">primera vez</span></div>
+      <div class="stat"><span class="stat__n stat__n--inf">∞</span><span class="stat__l">momias envueltas</span></div>
+    </div>
+  </div>
+  <div class="marquee-wrap">
+    <div class="marquee" id="marquee1"></div>
+    <div class="marquee marquee--rev" id="marquee2"></div>
+  </div>
+  <p class="tradicion__legends" data-reveal>Leyendas retiradas: Fluor · Hot · Frutilla · Dino</p>
+</section>
+
+<!-- 5. PREMIOS -->
+<section class="section premios" id="premios">
+  <div class="wrap">
+    <h2 class="section__title premios__title" data-reveal>Importantes<br>premios<sup>*</sup></h2>
+    <div class="premios__grid" data-reveal-group>
+      <figure class="premio"><img src="img/premio-copa.webp" alt="La copa" loading="lazy" width="600" height="600"><figcaption>La copa</figcaption></figure>
+      <figure class="premio"><img src="img/premio-cofre.webp" alt="El cofre" loading="lazy" width="600" height="600"><figcaption>El cofre</figcaption></figure>
+      <figure class="premio"><img src="img/premio-caja.webp" alt="La caja fuerte" loading="lazy" width="600" height="600"><figcaption>La caja fuerte</figcaption></figure>
+    </div>
+    <p class="premios__note" data-reveal>*como todos los años</p>
+  </div>
+</section>
+
+<!-- 6. MAPA -->
+<section class="mapa" id="mapa">
+  <div class="mapa__stage">
+    <div class="mapa__globe" id="globe"></div>
+    <div class="mapa__map" id="map"></div>
+    <div class="mapa__hud" aria-hidden="true">
+      <span>Sunshine GPS</span>
+      <span id="mapAlt">ALT 36.000 km</span>
+    </div>
+    <div class="mapa__label" id="mapLabel">Planeta Tierra</div>
+    <div class="mapa__pin" id="mapPin" aria-hidden="true">
+      <svg viewBox="0 0 48 64" width="48" height="64"><path d="M24 0C10.7 0 0 10.7 0 24c0 18 24 40 24 40s24-22 24-40C48 10.7 37.3 0 24 0z" fill="#FF3D8A"/><circle cx="24" cy="24" r="10" fill="#fff"/></svg>
+    </div>
+    <div class="mapa__card" id="mapCard">
+      <p class="mapa__card-title">Plaza Florencio Sánchez</p>
+      <p class="mapa__card-sub">Bosques de Palermo · cerca del Lago de Regatas</p>
+      <a class="btn" href="https://maps.app.goo.gl/HXdKimXkS9MWiJNE6" target="_blank" rel="noopener">Abrir en Google Maps</a>
+    </div>
+    <p class="mapa__credit">© Esri, Maxar, Earthstar Geographics</p>
+  </div>
+</section>
+
+<!-- 7. DATA CLAVE -->
+<section class="final" id="data">
+  <div class="wrap">
+    <p class="section__kicker" data-reveal>La data</p>
+    <p class="final__date" data-reveal>Sábado 31 de octubre</p>
+    <p class="final__time" data-reveal>14:30</p>
+    <p class="final__warn" data-reveal>A las 18 nos echan. No llegues tarde.</p>
+    <p class="final__place" data-reveal>Plaza Florencio Sánchez<br><span>Bosques de Palermo</span></p>
+    <p class="final__bring" data-reveal><strong>Traer:</strong> ropa deportiva cómoda + algo para tomar o picar (dulce o salado).</p>
+    <div class="actions" data-reveal>
+      <a class="btn btn--wa" id="waBtn" href="#" target="_blank" rel="noopener">Avisame si venís</a>
+      <a class="btn" href="https://maps.app.goo.gl/HXdKimXkS9MWiJNE6" target="_blank" rel="noopener">Cómo llegar</a>
+      <button class="btn btn--ghost" id="icsBtn" type="button">Agendar</button>
+    </div>
+    <p class="final__gcal" data-reveal><a id="gcalLink" href="#" target="_blank" rel="noopener">o agregalo en Google Calendar</a></p>
+  </div>
+</section>
+
+<footer class="footer">Jacowaco's Sunshine Games · 7ª edición · 2018 → 2026</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="js/map.js"></script>
+<script type="module" src="js/globe.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
