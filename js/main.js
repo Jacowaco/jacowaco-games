@@ -78,8 +78,8 @@
       </div>`).join('');
 
   // Marquee de fotos (dos filas, duplicadas para loop infinito)
-  const half = Math.ceil(FOTOS.length / 2);
-  const rows = [FOTOS.slice(0, half), FOTOS.slice(half)];
+  const per = Math.ceil(FOTOS.length / 3);
+  const rows = [FOTOS.slice(0, per), FOTOS.slice(per, per * 2), FOTOS.slice(per * 2)];
   rows.forEach((list, i) => {
     const html = list.map(f => `<img src="img/${f}-s.webp" alt="" loading="lazy">`).join('');
     $('#marquee' + (i + 1)).innerHTML = html + html;
@@ -88,8 +88,8 @@
   // ===== HERO ================================================================
   if (!reduce) {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.from('[data-hero]', { y: 40, opacity: 0, duration: 1, stagger: 0.15 }, 0.3)
-      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 0.5);
+    tl.from('[data-hero]', { y: 40, opacity: 0, duration: 1, stagger: 0.15 }, 0.4)
+      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 1.9);
     gsap.to('.hero__content', {
       yPercent: -25, opacity: 0.2, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
@@ -129,7 +129,6 @@
     'Mentira. El sorteo real es en la plaza.',
     'No te ilusiones, en la plaza se sortea de nuevo.',
     'Esto no vale. La cinta posta te la doy yo.',
-    'Capturá pantalla igual, por las dudas.',
   ];
   let spinning = false;
   function show(k) { rName.textContent = EQUIPOS[k].nombre; rCinta.className = 'cinta cinta--' + k; }
@@ -186,7 +185,11 @@
 
   function tick() {
     if (!mapaVisible) { rafOn = false; return; }
-    current += (target - current) * 0.14;
+    const inMap = current > 0.5 && target > current;
+    const waiting = inMap && window.sunshineMap && window.sunshineMap.loading();
+    let step = (target - current) * (waiting ? 0.01 : 0.14);
+    if (inMap) step = Math.min(step, 0.0045); // descenso acotado: Leaflet mantiene tiles del nivel anterior
+    current += step;
     if (Math.abs(target - current) < 0.0005) current = target;
     applyProgress(current);
     requestAnimationFrame(tick);
