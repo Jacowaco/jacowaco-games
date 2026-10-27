@@ -11,7 +11,9 @@
   --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .42 0 0 0 -.19'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
+/* Mientras el Hall of Fame tiene el control, la página no scrollea (corta también la inercia) */
+html.is-frozen,html.is-frozen body{overflow:hidden;overscroll-behavior:none}
 body{font-family:var(--f-body);background:var(--paper);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.45}
 img{display:block;max-width:100%}
 a{color:inherit}
