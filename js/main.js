@@ -94,6 +94,19 @@
   document.querySelectorAll('.tira').forEach(t => tiraIO.observe(t));
 
   // ===== HERO ================================================================
+  // En celu el título sube y la cinta tapa la parte de abajo del sol: el slogan se centra en lo
+  // que queda visible. Se mide con offsetTop (layout, sin las animaciones de entrada).
+  function fitSlogan() {
+    const hero = $('.hero'), sun = $('.hero__sun'), content = $('.hero__content'), tape = $('.hero__who');
+    if (window.innerWidth >= 700) { hero.style.removeProperty('--slogan-pb'); return; }
+    const tapeTop = content.offsetTop + tape.offsetTop;
+    const covered = sun.offsetTop + sun.offsetHeight - tapeTop + 8;       // + aire sobre la cinta
+    hero.style.setProperty('--slogan-pb', Math.max(0, covered) + 'px');
+  }
+  fitSlogan();
+  window.addEventListener('resize', fitSlogan);
+  if (document.fonts) document.fonts.ready.then(fitSlogan);
+
   // Orden: slogan sobre la lluvia → se despeja y sale el sol detrás → título y datos → cintas
   if (!reduce) {
     // El slogan entra sobre la lluvia; mientras termina de aparecer se despeja y sube el sol
@@ -178,73 +191,69 @@
   // El recorrido termina con la figurita 2026 centrada en pantalla.
   // clientWidth descuenta la barra de scroll; innerWidth no.
   const hofLast = album.querySelector('.figu--next');
-  // Se mide con offsetLeft/offsetWidth (layout puro) para que el estampado, que escala
-  // las figuritas, no altere la cuenta.
   // El álbum arranca con la primera figurita en el centro de la pantalla y termina con la 2026
-  // en el centro: cada una se estampa al llegar al medio y el scroll se la lleva a la izquierda.
+  // en el centro. Cada figurita se estampa al llegar al medio y el scroll se la lleva a la izquierda.
+  // Se mide con offsetLeft/offsetWidth (layout puro) para que el estampado, que escala, no altere la cuenta.
   const figus = gsap.utils.toArray('.album .figu');
-  const vwNow = () => document.documentElement.clientWidth;
+  const vwNow = () => document.documentElement.clientWidth;               // sin la barra de scroll
   const albumRestLeft = () => album.getBoundingClientRect().left - gsap.getProperty(album, 'x');
   const centerOf = f => f.offsetLeft + f.offsetWidth / 2;                 // centro dentro del álbum
-  const hofStartX = () => vwNow() / 2 - (albumRestLeft() + centerOf(figus[0]));
-  const hofEndX = () => vwNow() / 2 - (albumRestLeft() + centerOf(hofLast));
-  // HOF_SLOW > 1: hace falta más scroll que píxeles recorre el álbum, así un scroll rápido
-  // (sobre todo con el dedo en el celu) no se lleva las figuritas antes de que se peguen.
-  const HOF_SLOW = 1.6;
-  // HOF_HOLD: al frenarse la sección, el álbum se queda quieto un tramo de scroll mientras se
-  // pega la primera figurita; recién después empieza a correr.
-  const hofHold = () => window.innerHeight * 0.35;
-  function hofLayout() { hofOuter.style.height = (window.innerHeight + hofHold() + Math.max(0, hofStartX() - hofEndX()) * HOF_SLOW) + 'px'; }
+  const xFor = f => vwNow() / 2 - (albumRestLeft() + centerOf(f));        // x que deja a f en el centro
+  // HOF_SLOW > 1: hace falta más scroll que píxeles recorre el álbum.
+  const HOF_SLOW = 1.4;
+  // Al frenarse la sección, un tramo corto de scroll con el álbum quieto (se pega la primera).
+  const hofHold = () => window.innerHeight * 0.2;
+  function hofLayout() { hofOuter.style.height = (window.innerHeight + hofHold() + Math.max(0, xFor(figus[0]) - xFor(hofLast)) * HOF_SLOW) + 'px'; }
   hofLayout();
   ScrollTrigger.addEventListener('refreshInit', hofLayout);
-  let stampNextIdx = 0, lastStampAt = -1;
-  let albumV = 0, lastAX = null, lastAT = 0, scrollV = 0;                // velocidades (ver abajo)
-  gsap.fromTo(album, { x: () => hofStartX() }, {
-    x: () => hofEndX(), ease: 'none',
-    scrollTrigger: { trigger: hofOuter, start: () => `top+=${Math.round(hofHold())} top`, end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
-    onUpdate: () => stampCheck(),
+
+  // El álbum sigue al scroll (suavizado), con una "traba": no puede pasar el centro de la próxima
+  // figurita que todavía no se pegó. Con scroll lento ni se nota; con scroll rápido el álbum
+  // avanza a golpes, figurita por figurita, y cada una se pega siempre en el centro, a la vista.
+  let hofProg = 0, albumX = null, gateIdx = reduce ? figus.length : 0, stampIdx = 0, hofOn = false;
+  ScrollTrigger.create({
+    trigger: hofOuter, start: () => `top+=${Math.round(hofHold())} top`, end: 'bottom bottom', invalidateOnRefresh: true,
+    onUpdate: self => { hofProg = self.progress; },
+    onRefresh: self => { hofProg = self.progress; albumX = null; },
   });
+  function hofTick() {
+    const start = xFor(figus[0]), end = xFor(hofLast);
+    let target = start + (end - start) * hofProg;
+    if (gateIdx < figus.length) target = Math.max(target, xFor(figus[gateIdx]));
+    if (albumX === null || reduce) albumX = target;
+    else albumX += (target - albumX) * 0.16;
+    gsap.set(album, { x: albumX });
+    stampCheck();
+  }
+  // Solo corre mientras la sección está cerca de la pantalla
+  ScrollTrigger.create({
+    trigger: hofOuter, start: 'top bottom', end: 'bottom top',
+    onToggle: self => {
+      if (self.isActive && !hofOn) { hofOn = true; gsap.ticker.add(hofTick); }
+      else if (!self.isActive && hofOn) { hofOn = false; gsap.ticker.remove(hofTick); }
+    },
+  });
+  albumX = null; gsap.set(album, { x: xFor(figus[0]) });
 
   // Figuritas estampadas de a una: cada una cae grande y torcida en el centro de la pantalla,
-  // pega contra el álbum y lo sacude. Cada una arranca apenas llega al medio; entre una y otra
-  // hay un mínimo de 0,12 s para que se lean como golpes separados, sin hacer cola larga.
-  // Velocidad del álbum (px/s hacia la izquierda), suavizada: con scroll rápido el golpe se
-  // adelanta lo justo para terminar de pegar en el centro y no cuando ya se fue.
-  function trackAlbumVelocity() {
-    const x = gsap.getProperty(album, 'x'), t = gsap.ticker.time;
-    if (lastAX !== null && t > lastAT) albumV = albumV * 0.3 + Math.max(0, (lastAX - x) / (t - lastAT)) * 0.7;
-    lastAX = x; lastAT = t;
-  }
+  // pega contra el álbum y lo sacude. La próxima arranca un toque antes de llegar al medio;
+  // la traba sostiene al álbum en el centro hasta que termina de pegar.
   function stampCheck() {
-    trackAlbumVelocity();
-    if (reduce || stampNextIdx >= figus.length) return;
-    const vw = vwNow(), vh = window.innerHeight;
-    const fast = albumV > 700;
-    const dur = fast ? 0.18 : 0.26, gap = fast ? 0.06 : 0.12;
-    // la sección todavía no se frenó (si venís rápido, la primera arranca un toque antes
-    // para terminar de pegar justo cuando la sección se frena)
-    if (hofOuter.getBoundingClientRect().top > vh * 0.08 + Math.min(Math.max(0, scrollV) * dur, vh * 0.1)) return;
-    const left = album.getBoundingClientRect().left;                     // incluye el desplazamiento actual
-    while (stampNextIdx < figus.length) {
-      const f = figus[stampNextIdx];
-      const now = gsap.ticker.time;
-      const at = Math.max(now, lastStampAt + gap);
-      // dispara antes del medio: lo que el álbum avanza mientras espera su turno y mientras cae
-      // el álbum va frenando por el suavizado del scrub y recorre menos de lo que dice la velocidad
-      // (medido: 0.6 con scroll normal, 0.85 con scroll muy rápido)
-      const lead = Math.max(f.offsetWidth * 0.1, albumV * (at - now + dur) * (fast ? 0.85 : 0.6));
-      if (left + centerOf(f) > vw * 0.5 + lead) break;
-      stampNextIdx++;
-      lastStampAt = at;
-      gsap.delayedCall(at - now, () => stamp(f, dur));
-    }
+    if (reduce || stampIdx >= figus.length || stampIdx > gateIdx) return;
+    if (hofOuter.getBoundingClientRect().top > window.innerHeight * 0.08) return; // la sección no se frenó
+    const f = figus[stampIdx];
+    const left = album.getBoundingClientRect().left;
+    if (left + centerOf(f) > vwNow() / 2 + f.offsetWidth * 0.15) return;          // todavía no llegó
+    stampIdx++;
+    stamp(f);
   }
-  function stamp(f, dur) {
+  function stamp(f) {
     const r = parseFloat(getComputedStyle(f).getPropertyValue('--r')) || 0;
     const side = figus.indexOf(f) % 2 ? 1 : -1;
     gsap.fromTo(f, { opacity: 0, scale: 1.7, rotation: r + side * 12, y: -30 }, {
-      opacity: 1, scale: 1, rotation: r, y: 0, duration: dur, ease: 'power4.in',
+      opacity: 1, scale: 1, rotation: r, y: 0, duration: 0.24, ease: 'power4.in',
       onComplete: () => {
+        gateIdx++;                                                        // libera el álbum
         gsap.timeline().to(album, { y: 7, duration: 0.05, ease: 'power1.out' })
           .to(album, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.35)' });
       },
@@ -269,13 +278,7 @@
       .to('.titulos__q', { rotation: -1.5, duration: 0.07, yoyo: true, repeat: 3, ease: 'power1.inOut' }, qAt + 0.95);
   }
 
-  if (!reduce) {
-    gsap.set(figus, { opacity: 0 });
-    ScrollTrigger.create({
-      trigger: hofOuter, start: 'top bottom', end: 'bottom top',
-      onUpdate: self => { scrollV = self.getVelocity(); stampCheck(); },
-    });
-  }
+  if (!reduce) gsap.set(figus, { opacity: 0 });
 
   // ===== MAPA: coreografía ===================================================
   const mapa = $('.mapa'), globeEl = $('#globe'), mapEl = $('#map');
