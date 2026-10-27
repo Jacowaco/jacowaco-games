@@ -3,7 +3,7 @@
   'use strict';
 
   // ===== CONFIG ============================================================
-  const WHATSAPP_NUMBER = 'WHATSAPP_NUMBER'; // ej: '5491112345678' (con código de país, sin +)
+  const WHATSAPP_NUMBER = '5491133685915'; // ej: '5491112345678' (con código de país, sin +)
   const SITE_URL = 'https://jacowaco.github.io/jacowaco-games/';
   const EVENT = {
     title: "Jacowaco's Sunshine Games",
@@ -25,7 +25,7 @@
     { year: 2019, lugar: 'Plaza',  fecha: '9 nov',  campeon: 'ninja',  otros: ['Hot', 'Pinup', 'Patrio'],      foto: 'ganadores2019' },
     { year: 2021, lugar: 'Plaza',  fecha: '13 nov', campeon: 'ninja',  otros: ['Frutilla', 'Patrio', 'Pinup'], foto: 'ganadores2021' },
     { year: 2023, lugar: 'Dentro', fecha: '21 oct', campeon: 'patrio', otros: ['Gay', 'Ninja', 'Pinup'],       foto: 'ganadores2023' },
-    { year: 2024, lugar: 'Plaza',  fecha: '9 nov',  campeon: 'gay',    otros: ['Patrio', 'Dino', 'Ninja'],     foto: 'ganadores2024' },
+    { year: 2024, lugar: 'Plaza',  fecha: '9 nov',  campeon: 'gay',    otros: ['Patrio', 'Dino', 'Ninja'],     foto: 'ganadores2024', nota: 'Nadie le sacó foto al equipo. Va la grupal.' },
     { year: 2025, lugar: 'Dentro', fecha: '25 oct', campeon: 'pinup',  otros: ['Gay', 'Patrio', 'Ninja'],      foto: 'ganadores2025' },
   ];
 
@@ -52,7 +52,7 @@
         <div class="card__bottom">
           <span class="cinta cinta--${h.campeon}"></span>
           <p class="card__champ"><small>Campeón</small>${eq.nombre}</p>
-          <p class="card__others">${h.lugar} · ${h.fecha} · vs ${h.otros.join(' · ')}</p>
+          <p class="card__others">${h.lugar} · ${h.fecha} · vs ${h.otros.join(' · ')}${h.nota ? '<br><em>' + h.nota + '</em>' : ''}</p>
         </div>
       </article>`;
   }).join('') + `

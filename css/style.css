@@ -92,6 +92,7 @@ em{font-style:normal}
 .card__champ{font-family:var(--font-display);font-size:clamp(30px,5.5vw,48px);line-height:.9;text-transform:uppercase}
 .card__champ small{display:block;font-size:.42em;letter-spacing:.25em;opacity:.7;margin-bottom:4px}
 .card__others{font-size:12px;opacity:.65;margin-top:8px}
+.card__others em{opacity:.8;font-style:italic}
 .card--next{display:grid;place-items:center;border:2px dashed rgba(255,255,255,.35);background:rgba(255,255,255,.03);text-align:center;padding:20px}
 .card--next .card__year{position:static;font-size:clamp(70px,12vw,120px);color:var(--sun)}
 .card--next .card__champ{font-size:clamp(30px,6vw,52px)}
