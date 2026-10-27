@@ -41,85 +41,68 @@
   gsap.registerPlugin(ScrollTrigger);
   ScrollTrigger.config({ ignoreMobileResize: true });
 
-  // ===== PODIO: tarjetas =====================================================
-  const track = $('#podioTrack');
-  track.innerHTML = HISTORIAL.map(h => {
+  // ===== HALL OF FAME: álbum de figuritas ====================================
+  $('#podioTrack').innerHTML = HISTORIAL.map(h => {
     const eq = EQUIPOS[h.campeon];
     return `
-      <article class="card">
-        <img src="img/${h.foto}.webp" alt="Equipo ${eq.nombre}, campeón ${h.year}" loading="lazy">
-        <div class="card__year">${h.year}</div>
-        <div class="card__bottom">
+      <article class="figu">
+        <img src="img/${h.foto}-s.webp" alt="Equipo ${eq.nombre}, campeón ${h.year}" loading="lazy">
+        <span class="figu__n">${h.year}</span>
+        <div class="figu__foot">
           <span class="cinta cinta--${h.campeon}"></span>
-          <p class="card__champ"><small>Campeón</small>${eq.nombre}</p>
-          <p class="card__others">${h.lugar} · ${h.fecha} · vs ${h.otros.join(' · ')}${h.nota ? '<br><em>' + h.nota + '</em>' : ''}</p>
+          <p class="figu__label">Campeón</p>
+          <p class="figu__name">${eq.nombre}</p>
+          <p class="figu__meta">${h.lugar} · ${h.fecha} · vs ${h.otros.join(' · ')}${h.nota ? '<br><em>' + h.nota + '</em>' : ''}</p>
         </div>
       </article>`;
   }).join('') + `
-      <article class="card card--next">
-        <div>
-          <div class="card__year">2026</div>
-          <p class="card__champ">Tu foto acá</p>
-          <p>Sáb 31 oct · Plaza</p>
-        </div>
+      <article class="figu figu--next">
+        <p class="figu__year">2026</p>
+        <p class="figu__hand">Tu foto acá</p>
+        <p class="figu__meta">Sáb 31 oct · Plaza</p>
       </article>`;
 
-  // Tabla de títulos
+  // Títulos contados con palitos
   const counts = {};
   HISTORIAL.forEach(h => { counts[h.campeon] = (counts[h.campeon] || 0) + 1; });
-  const maxC = Math.max(...Object.values(counts));
   $('#titulosRows').innerHTML = Object.keys(EQUIPOS)
     .sort((a, b) => (counts[b] || 0) - (counts[a] || 0))
-    .map(k => `
-      <div class="titulos__row">
-        <span class="titulos__team">${EQUIPOS[k].nombre}</span>
-        <span class="cinta cinta--${k} titulos__bar" style="width:${(counts[k] || 0) / maxC * 100}%"></span>
-        <span class="titulos__n">${counts[k] || 0}</span>
-      </div>`).join('');
+    .map(k => {
+      const n = counts[k] || 0;
+      return `
+      <li>
+        <span class="tally__team">${EQUIPOS[k].nombre}</span>
+        <span class="tally__marks" aria-hidden="true">${'<i></i>'.repeat(n)}</span>
+        <span class="tally__n">${n} ${n === 1 ? 'título' : 'títulos'}</span>
+      </li>`;
+    }).join('');
 
-  // Marquee de fotos (dos filas, duplicadas para loop infinito)
+  // Tiras de fotos pegadas con cinta (duplicadas para que el loop no tenga corte)
   const per = Math.ceil(FOTOS.length / 3);
-  const rows = [FOTOS.slice(0, per), FOTOS.slice(per, per * 2), FOTOS.slice(per * 2)];
-  rows.forEach((list, i) => {
-    const html = list.map(f => `<img src="img/${f}-s.webp" alt="" loading="lazy">`).join('');
-    $('#marquee' + (i + 1)).innerHTML = html + html;
+  [FOTOS.slice(0, per), FOTOS.slice(per, per * 2), FOTOS.slice(per * 2)].forEach((list, i) => {
+    const html = list.map(f => `<figure class="foto"><img src="img/${f}-s.webp" alt="" loading="lazy"></figure>`).join('');
+    $('#tira' + (i + 1)).innerHTML = html + html;
   });
 
   // ===== HERO ================================================================
+  // Orden: slogan sobre la lluvia → se despeja y sale el sol detrás → título y datos → cintas
   if (!reduce) {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    tl.from('[data-hero]', { y: 40, opacity: 0, duration: 1, stagger: 0.15 }, 0.4)
-      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 1.9);
+    tl.fromTo('.hero__slogan', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.9 }, 0.3)
+      .to('.nube--1', { xPercent: -130, duration: 1.8, ease: 'power2.in' }, 1.4)
+      .to('.nube--2', { xPercent: 130, duration: 1.8, ease: 'power2.in' }, 1.5)
+      .to('.nube--3', { yPercent: -140, duration: 1.6, ease: 'power2.in' }, 1.6)
+      .to('.hero__rain', { autoAlpha: 0, duration: 1.6, ease: 'power1.inOut' }, 1.6)
+      .set('.hero__clouds', { autoAlpha: 0 }, 3.4)
+      .to('.hero__sun', { y: 0, duration: 1.9 }, 1.8)
+      .to('.hero__slogan', { color: '#191816', duration: 1 }, 2.0)
+      .fromTo('[data-hero]', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.15 }, 3.1)
+      .set('.hero__cintas', { visibility: 'visible' }, 3.6)
+      .from('.hero__cintas .cinta', { xPercent: (i) => (i % 2 ? 110 : -110), duration: 1.1, stagger: 0.12, ease: 'power4.out' }, 3.6);
     gsap.to('.hero__content', {
       yPercent: -25, opacity: 0.2, ease: 'none',
       scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
     });
-  }
-
-  // ===== REVEALS =============================================================
-  if (!reduce) {
-    document.querySelectorAll('[data-reveal]').forEach(el => {
-      gsap.to(el, { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
-    });
-    document.querySelectorAll('[data-reveal-group]').forEach(g => {
-      gsap.to(g.children, { y: 0, opacity: 1, duration: 0.8, stagger: 0.12, ease: 'power3.out',
-        scrollTrigger: { trigger: g, start: 'top 85%', once: true } });
-    });
-    document.querySelectorAll('.titulos__bar').forEach(b => {
-      gsap.to(b, { scaleX: 1, duration: 1.1, ease: 'power3.out',
-        scrollTrigger: { trigger: b, start: 'top 90%', once: true } });
-    });
-    document.querySelectorAll('[data-count]').forEach(el => {
-      const to = +el.dataset.count, from = +(el.dataset.from || 0);
-      const o = { v: from };
-      gsap.to(o, { v: to, duration: 1.6, ease: 'power2.out', snap: { v: 1 },
-        onUpdate: () => { el.textContent = Math.round(o.v); },
-        scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
-    });
-  } else {
-    document.querySelectorAll('.titulos__bar').forEach(b => { b.style.transform = 'none'; });
-    document.querySelectorAll('[data-count]').forEach(el => { el.textContent = el.dataset.count; });
   }
 
   // ===== RULETA ==============================================================
@@ -128,7 +111,7 @@
   const NOTAS = [
     'Mentira. El sorteo real es en la plaza.',
     'No te ilusiones, en la plaza se sortea de nuevo.',
-    'Esto no vale. La cinta posta te la doy yo.',
+    'Las cintas se sortean en la plaza.',
   ];
   let spinning = false;
   function show(k) { rName.textContent = EQUIPOS[k].nombre; rCinta.className = 'cinta cinta--' + k; }
@@ -141,20 +124,29 @@
       if (steps > 0) { delay *= 1.2; setTimeout(tick, delay); return; }
       spinning = false; rBtn.textContent = 'Otra vez';
       rNote.textContent = NOTAS[Math.floor(Math.random() * NOTAS.length)];
-      if (!reduce) gsap.fromTo('#ruletaSlot', { scale: 0.96 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1,0.4)' });
+      if (!reduce) gsap.fromTo('#ruletaSlot', { rotation: -3 }, { rotation: -1, duration: 0.6, ease: 'elastic.out(1,0.4)' });
     };
     tick();
   });
 
-  // ===== PODIO: scroll horizontal ===========================================
-  const outer = $('.podio__outer');
-  function podioExtra() { return Math.max(0, track.offsetWidth - window.innerWidth); }
-  function podioLayout() { outer.style.height = (window.innerHeight + podioExtra()) + 'px'; }
-  podioLayout();
-  ScrollTrigger.addEventListener('refreshInit', podioLayout);
-  gsap.to(track, {
-    x: () => -podioExtra(), ease: 'none',
-    scrollTrigger: { trigger: outer, start: 'top top', end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
+  // ===== EDICIÓN 2026: los juegos tachados no se dejan leer =====================
+  const SECRETOS = ['Se revela en la plaza.', 'Ni lo intentes.', 'Buen intento.', 'Eso es secreto.', 'Paciencia: sábado 31.'];
+  let secretoIdx = 0;
+  document.querySelectorAll('.redact').forEach(b => b.addEventListener('click', () => {
+    b.classList.remove('is-shake'); void b.offsetWidth; b.classList.add('is-shake');
+    $('#planillaNote').textContent = SECRETOS[secretoIdx++ % SECRETOS.length];
+  }));
+
+  // ===== HALL OF FAME: la sección se frena y el álbum pasa de costado ==========
+  const album = $('#podioTrack'), hofOuter = $('.hof__outer');
+  // clientWidth descuenta la barra de scroll; innerWidth no, y se comía el margen derecho
+  function hofExtra() { return Math.max(0, album.offsetWidth - document.documentElement.clientWidth); }
+  function hofLayout() { hofOuter.style.height = (window.innerHeight + hofExtra()) + 'px'; }
+  hofLayout();
+  ScrollTrigger.addEventListener('refreshInit', hofLayout);
+  gsap.to(album, {
+    x: () => -hofExtra(), ease: 'none',
+    scrollTrigger: { trigger: hofOuter, start: 'top top', end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
   });
 
   // ===== MAPA: coreografía ===================================================

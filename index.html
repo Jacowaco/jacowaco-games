@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Jacowaco's Sunshine Games</title>
   <meta name="description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
-  <meta name="theme-color" content="#FFC628">
+  <meta name="theme-color" content="#86C8FF">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Jacowaco's Sunshine Games · 7ª edición">
   <meta property="og:description" content="Sáb 31 oct · 14:30 · Plaza Florencio Sánchez. 7ª edición. Importantes premios*.">
@@ -15,7 +15,7 @@
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script>document.documentElement.classList.add("js")</script>
@@ -25,15 +25,28 @@
 
 <!-- 1. HERO -->
 <header class="hero" id="top">
-  <div class="hero__rays" aria-hidden="true"></div>
   <div class="hero__sun" aria-hidden="true"></div>
-  <div class="hero__rain" aria-hidden="true"></div>
+  <div class="hero__rain" aria-hidden="true">
+    <div class="drops drops--far"></div>
+    <div class="drops drops--near"></div>
+  </div>
+  <div class="hero__clouds" aria-hidden="true">
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <g id="nube"><circle cx="52" cy="66" r="30"/><circle cx="90" cy="46" r="38"/><circle cx="134" cy="56" r="32"/><circle cx="164" cy="74" r="22"/><rect x="26" y="66" width="160" height="34" rx="17"/></g>
+      </defs>
+    </svg>
+    <svg class="nube nube--1" viewBox="0 0 200 110"><use href="#nube" fill="#353e48" transform="translate(7 7)"/><use href="#nube" fill="#a3adb8"/></svg>
+    <svg class="nube nube--2" viewBox="0 0 200 110"><use href="#nube" fill="#353e48" transform="translate(7 7)"/><use href="#nube" fill="#b6bfc8"/></svg>
+    <svg class="nube nube--3" viewBox="0 0 200 110"><use href="#nube" fill="#353e48" transform="translate(7 7)"/><use href="#nube" fill="#8f9aa6"/></svg>
+  </div>
+  <p class="hero__slogan"><span>Este sábado sale el sol</span></p>
   <div class="hero__content">
-    <h1 class="hero__title" data-hero><small>Jacowaco's</small>Sunshine<br>Games</h1>
+    <p class="tape hero__who" data-hero>Jacowaco's</p>
+    <h1 class="hero__title" data-hero>Sunshine<br>Games</h1>
     <p class="hero__meta" data-hero>
-      <span>7ª edición</span><span>Sáb 31 oct</span><span>14:30</span>
+      <span>7ª edición</span><span>Sáb 31.10</span><span>14:30 hs</span>
     </p>
-    <p class="hero__tag" data-hero>Este sábado sale el sol</p>
   </div>
   <div class="hero__cintas" aria-hidden="true">
     <span class="cinta cinta--ninja"></span>
@@ -41,87 +54,111 @@
     <span class="cinta cinta--patrio"></span>
     <span class="cinta cinta--pinup"></span>
   </div>
-  <a class="hero__scroll" href="#equipos" aria-label="Scrolleá">↓</a>
+  <a class="hero__scroll" href="#equipos">↓ scrolleá</a>
 </header>
 
 <!-- 2. EQUIPOS -->
-<section class="section equipos" id="equipos">
+<section class="section paper equipos" id="equipos">
   <div class="wrap">
-    <h2 class="section__title" data-reveal>Los <em>equipos</em></h2>
-    <p class="section__sub" data-reveal>Las cintas se sortean en la plaza.</p>
-
-    <div class="equipos__grid" data-reveal-group>
-      <article class="team team--ninja">
-        <span class="cinta cinta--ninja"></span>
-        <h3 class="team__name">Ninja</h3>
-      </article>
-      <article class="team team--gay">
-        <span class="cinta cinta--gay"></span>
-        <h3 class="team__name">Gay</h3>
-      </article>
-      <article class="team team--patrio">
-        <span class="cinta cinta--patrio"></span>
-        <h3 class="team__name">Patrio</h3>
-      </article>
-      <article class="team team--pinup">
-        <span class="cinta cinta--pinup"></span>
-        <h3 class="team__name">Pinup</h3>
-      </article>
+    <div class="head">
+      <h2 class="title">Los equipos</h2>
     </div>
 
-    <div class="ruleta" data-reveal>
-      <div class="ruleta__slot" id="ruletaSlot" aria-live="polite">
+    <div class="equipos__grid">
+      <article class="team"><span class="cinta cinta--ninja"></span><h3 class="team__name">Ninja</h3></article>
+      <article class="team"><span class="cinta cinta--gay"></span><h3 class="team__name">Gay</h3></article>
+      <article class="team"><span class="cinta cinta--patrio"></span><h3 class="team__name">Patrio</h3></article>
+      <article class="team"><span class="cinta cinta--pinup"></span><h3 class="team__name">Pinup</h3></article>
+    </div>
+
+    <div class="rifa" id="ruletaSlot" aria-live="polite">
+      <div class="rifa__stub"><span>Nº</span><b>0031</b></div>
+      <div class="rifa__body">
+        <p class="label">Sorteo de prueba</p>
         <span class="cinta cinta--ninja" id="ruletaCinta"></span>
-        <span class="ruleta__name" id="ruletaName">¿?</span>
+        <span class="rifa__name" id="ruletaName">¿?</span>
+        <button class="btn btn--pink" id="ruletaBtn" type="button">¿Qué cinta te toca?</button>
+        <p class="rifa__note" id="ruletaNote"></p>
       </div>
-      <button class="btn btn--sun" id="ruletaBtn" type="button">¿Qué cinta te toca?</button>
-      <p class="ruleta__note" id="ruletaNote"></p>
     </div>
   </div>
 </section>
 
-<!-- 3. PODIO -->
-<section class="podio" id="podio">
-  <div class="podio__outer">
-    <div class="podio__stage">
-      <div class="podio__head">
-        <h2 class="section__title">Hall of fame</h2>
-        <p class="section__sub">Un lugar acá se gana en la plaza.</p>
-      </div>
-      <div class="podio__track" id="podioTrack"></div>
+<!-- 3. HALL OF FAME -->
+<section class="cartulina hof" id="podio">
+  <div class="hof__outer">
+    <div class="hof__stage">
+      <div class="wrap hof__head"><h2 class="title">Hall of fame</h2></div>
+      <div class="album" id="podioTrack"></div>
     </div>
   </div>
-  <div class="titulos wrap">
-    <p class="section__kicker" data-reveal>Títulos</p>
-    <div class="titulos__rows" id="titulosRows"></div>
-    <p class="titulos__q" data-reveal>Los Ninja no ganan desde 2021.<br>¿Vuelven a perder este año?</p>
+  <div class="wrap hof__after">
+    <div class="titulos">
+      <div class="tally">
+        <p class="label">Títulos</p>
+        <ul class="tally__rows" id="titulosRows"></ul>
+      </div>
+      <p class="titulos__q">Los Ninja no ganan desde 2021.<br><mark>¿Vuelven a perder este año?</mark></p>
+    </div>
   </div>
 </section>
 
 <!-- 4. TRADICIÓN -->
-<section class="section tradicion" id="tradicion">
+<section class="section paper tradicion" id="tradicion">
   <div class="wrap">
-    <p class="section__kicker" data-reveal>Desde 2018</p>
-    <h2 class="section__title" data-reveal>Una tradición</h2>
-    <div class="stats" data-reveal-group>
-      <div class="stat"><span class="stat__n" data-count="7">0</span><span class="stat__l">ediciones</span></div>
-      <div class="stat"><span class="stat__n" data-count="2018" data-from="1990">0</span><span class="stat__l">primera vez</span></div>
-      <div class="stat"><span class="stat__n" data-count="1">0</span><span class="stat__l">momia envuelta</span></div>
+    <div class="head head--split">
+      <div>
+        <p class="label">Desde 2018</p>
+        <h2 class="title">Una tradición</h2>
+      </div>
+      <dl class="ficha">
+        <div><dt>Ediciones</dt><dd>7</dd></div>
+        <div><dt>Primera vez</dt><dd>2018</dd></div>
+        <div><dt>Momias envueltas</dt><dd>1</dd></div>
+      </dl>
     </div>
   </div>
-  <div class="marquee-wrap">
-    <div class="marquee" id="marquee1"></div>
-    <div class="marquee marquee--rev" id="marquee2"></div>
-    <div class="marquee marquee--slow" id="marquee3"></div>
+  <div class="tiras" aria-hidden="true">
+    <div class="tira" id="tira1"></div>
+    <div class="tira tira--rev" id="tira2"></div>
+    <div class="tira tira--slow" id="tira3"></div>
   </div>
-  <p class="tradicion__legends" data-reveal>Equipos retirados: Fluor · Hot · Frutilla · Dino</p>
+  <div class="wrap">
+    <p class="retirados"><span class="label">Equipos retirados</span> <s>Fluor</s> <s>Hot</s> <s>Frutilla</s> <s>Dino</s></p>
+  </div>
+</section>
+
+<!-- 4b. EDICIÓN 2026: juegos nuevos (secretos) -->
+<section class="section tinta secreto" id="secreto">
+  <div class="wrap secreto__grid">
+    <div class="secreto__copy">
+      <p class="tape secreto__tag">Edición 2026</p>
+      <h2 class="title">Muchos juegos<br>nuevos</h2>
+      <p class="secreto__hand">y sorpresas.</p>
+    </div>
+    <div class="planilla">
+      <p class="planilla__head"><span>Fixture 2026</span><span>Hoja 1 de 1</span></p>
+      <ol class="planilla__rows">
+        <li><span class="planilla__n">01</span><button class="redact" type="button" style="--w:74%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">02</span><button class="redact" type="button" style="--w:52%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">03</span><button class="redact" type="button" style="--w:66%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">04</span><button class="redact" type="button" style="--w:40%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">05</span><button class="redact" type="button" style="--w:80%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">06</span><button class="redact" type="button" style="--w:58%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">07</span><button class="redact" type="button" style="--w:46%" aria-label="Juego secreto"></button></li>
+        <li><span class="planilla__n">??</span><span class="planilla__code">311026</span></li>
+      </ol>
+      <span class="sello" aria-hidden="true">Secreto</span>
+      <p class="planilla__note" id="planillaNote" aria-live="polite"></p>
+    </div>
+  </div>
 </section>
 
 <!-- 5. PREMIOS -->
-<section class="section premios" id="premios">
+<section class="section rosa premios" id="premios">
   <div class="wrap">
-    <h2 class="section__title premios__title" data-reveal>Importantes<br>premios</h2>
-    <div class="premios__grid" data-reveal-group>
+    <h2 class="title">Importantes premios</h2>
+    <div class="premios__grid">
       <figure class="premio"><img src="img/premio-copa.webp" alt="La copa" loading="lazy" width="600" height="600"><figcaption>La copa</figcaption></figure>
       <figure class="premio"><img src="img/premio-cofre.webp" alt="El cofre" loading="lazy" width="600" height="600"><figcaption>El cofre</figcaption></figure>
       <figure class="premio"><img src="img/premio-caja.webp" alt="La caja fuerte" loading="lazy" width="600" height="600"><figcaption>La caja fuerte</figcaption></figure>
@@ -139,7 +176,7 @@
     </div>
     <div class="mapa__label" id="mapLabel">Planeta Tierra</div>
     <div class="mapa__pin" id="mapPin" aria-hidden="true">
-      <svg viewBox="0 0 48 64" width="48" height="64"><path d="M24 0C10.7 0 0 10.7 0 24c0 18 24 40 24 40s24-22 24-40C48 10.7 37.3 0 24 0z" fill="#FF3D8A"/><circle cx="24" cy="24" r="10" fill="#fff"/></svg>
+      <svg viewBox="0 0 48 64" width="48" height="64"><path d="M24 0C10.7 0 0 10.7 0 24c0 18 24 40 24 40s24-22 24-40C48 10.7 37.3 0 24 0z" fill="#FF4D9D" stroke="#191816" stroke-width="3"/><circle cx="24" cy="24" r="9" fill="#F3F2EC" stroke="#191816" stroke-width="3"/></svg>
     </div>
     <div class="mapa__card" id="mapCard">
       <p class="mapa__card-title">Plaza Florencio Sánchez</p>
@@ -150,22 +187,37 @@
   </div>
 </section>
 
-<!-- 7. DATA CLAVE -->
-<section class="final" id="data">
-  <div class="wrap">
-    <p class="section__kicker" data-reveal>La data</p>
-    <p class="final__date" data-reveal>Sábado 31 de octubre</p>
-    <p class="final__time" data-reveal>14:30</p>
-    <p class="final__warn" data-reveal>A las 18 nos echan. No llegues tarde.</p>
-    <p class="final__place" data-reveal>Plaza Florencio Sánchez<br><span>Bosques de Palermo</span></p>
-    <div class="bring" data-reveal>
-      <p class="section__kicker">Traer</p>
-      <ul class="bring__list">
-        <li><span class="bring__item">Ropa cómoda</span><span class="bring__note">para moverse</span></li>
-        <li><span class="bring__item">Algo para tomar o picar</span><span class="bring__note">dulce o salado</span></li>
-      </ul>
+<!-- 7. LA DATA -->
+<section class="cartulina final" id="data">
+  <div class="wrap final__wrap">
+    <p class="label">La data</p>
+    <div class="entrada">
+      <div class="entrada__row">
+        <span class="entrada__k">Cuándo</span>
+        <div class="entrada__v">
+          <p class="final__date">Sábado 31 de octubre</p>
+          <p class="final__time">14:30</p>
+          <p class="final__warn">A las 18 nos echan. No llegues tarde.</p>
+        </div>
+      </div>
+      <div class="entrada__row">
+        <span class="entrada__k">Dónde</span>
+        <div class="entrada__v">
+          <p class="final__place">Plaza Florencio Sánchez</p>
+          <p class="final__sub">Bosques de Palermo</p>
+        </div>
+      </div>
+      <div class="entrada__row">
+        <span class="entrada__k">Traer</span>
+        <div class="entrada__v">
+          <ul class="bring">
+            <li><b>Ropa cómoda</b> para moverse</li>
+            <li><b>Algo para tomar o picar</b> dulce o salado</li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class="actions" data-reveal>
+    <div class="actions">
       <a class="btn btn--wa" id="waBtn" href="#" target="_blank" rel="noopener">Avisame si venís</a>
       <a class="btn" href="https://maps.app.goo.gl/HXdKimXkS9MWiJNE6" target="_blank" rel="noopener">Cómo llegar</a>
       <a class="btn btn--ghost" id="gcalLink" href="#" target="_blank" rel="noopener">Agendar</a>
