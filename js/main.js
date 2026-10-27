@@ -188,47 +188,65 @@
   const centerOf = f => f.offsetLeft + f.offsetWidth / 2;                 // centro dentro del álbum
   const hofStartX = () => vwNow() / 2 - (albumRestLeft() + centerOf(figus[0]));
   const hofEndX = () => vwNow() / 2 - (albumRestLeft() + centerOf(hofLast));
-  function hofLayout() { hofOuter.style.height = (window.innerHeight + Math.max(0, hofStartX() - hofEndX())) + 'px'; }
+  // HOF_SLOW > 1: hace falta más scroll que píxeles recorre el álbum, así un scroll rápido
+  // (sobre todo con el dedo en el celu) no se lleva las figuritas antes de que se peguen.
+  const HOF_SLOW = 1.6;
+  // HOF_HOLD: al frenarse la sección, el álbum se queda quieto un tramo de scroll mientras se
+  // pega la primera figurita; recién después empieza a correr.
+  const hofHold = () => window.innerHeight * 0.35;
+  function hofLayout() { hofOuter.style.height = (window.innerHeight + hofHold() + Math.max(0, hofStartX() - hofEndX()) * HOF_SLOW) + 'px'; }
   hofLayout();
   ScrollTrigger.addEventListener('refreshInit', hofLayout);
-  const stampQueue = [];
-  let stampBusy = false, stampNextIdx = 0;
+  let stampNextIdx = 0, lastStampAt = -1;
+  let albumV = 0, lastAX = null, lastAT = 0, scrollV = 0;                // velocidades (ver abajo)
   gsap.fromTo(album, { x: () => hofStartX() }, {
     x: () => hofEndX(), ease: 'none',
-    scrollTrigger: { trigger: hofOuter, start: 'top top', end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
+    scrollTrigger: { trigger: hofOuter, start: () => `top+=${Math.round(hofHold())} top`, end: 'bottom bottom', scrub: reduce ? true : 0.4, invalidateOnRefresh: true },
     onUpdate: () => stampCheck(),
   });
 
   // Figuritas estampadas de a una: cada una cae grande y torcida en el centro de la pantalla,
-  // pega contra el álbum y lo sacude. Si scrolleás rápido, se encolan y se estampan más rápido.
+  // pega contra el álbum y lo sacude. Cada una arranca apenas llega al medio; entre una y otra
+  // hay un mínimo de 0,12 s para que se lean como golpes separados, sin hacer cola larga.
+  // Velocidad del álbum (px/s hacia la izquierda), suavizada: con scroll rápido el golpe se
+  // adelanta lo justo para terminar de pegar en el centro y no cuando ya se fue.
+  function trackAlbumVelocity() {
+    const x = gsap.getProperty(album, 'x'), t = gsap.ticker.time;
+    if (lastAX !== null && t > lastAT) albumV = albumV * 0.3 + Math.max(0, (lastAX - x) / (t - lastAT)) * 0.7;
+    lastAX = x; lastAT = t;
+  }
   function stampCheck() {
+    trackAlbumVelocity();
     if (reduce || stampNextIdx >= figus.length) return;
     const vw = vwNow(), vh = window.innerHeight;
-    if (hofOuter.getBoundingClientRect().top > vh * 0.08) return;      // la sección todavía no se frenó
+    const fast = albumV > 700;
+    const dur = fast ? 0.18 : 0.26, gap = fast ? 0.06 : 0.12;
+    // la sección todavía no se frenó (si venís rápido, la primera arranca un toque antes
+    // para terminar de pegar justo cuando la sección se frena)
+    if (hofOuter.getBoundingClientRect().top > vh * 0.08 + Math.min(Math.max(0, scrollV) * dur, vh * 0.1)) return;
     const left = album.getBoundingClientRect().left;                     // incluye el desplazamiento actual
     while (stampNextIdx < figus.length) {
       const f = figus[stampNextIdx];
-      // dispara un poco antes del medio (más cuanto más ancha es la figurita respecto de la pantalla),
-      // así termina de pegar justo en el centro mientras el álbum sigue corriendo
-      if (left + centerOf(f) > vw * 0.5 + f.offsetWidth * 0.25) break;
-      stampQueue.push(f); stampNextIdx++;
+      const now = gsap.ticker.time;
+      const at = Math.max(now, lastStampAt + gap);
+      // dispara antes del medio: lo que el álbum avanza mientras espera su turno y mientras cae
+      // el álbum va frenando por el suavizado del scrub y recorre menos de lo que dice la velocidad
+      // (medido: 0.6 con scroll normal, 0.85 con scroll muy rápido)
+      const lead = Math.max(f.offsetWidth * 0.1, albumV * (at - now + dur) * (fast ? 0.85 : 0.6));
+      if (left + centerOf(f) > vw * 0.5 + lead) break;
+      stampNextIdx++;
+      lastStampAt = at;
+      gsap.delayedCall(at - now, () => stamp(f, dur));
     }
-    if (!stampBusy) stampNext();
   }
-  function stampNext() {
-    const f = stampQueue.shift();
-    if (!f) { stampBusy = false; return; }
-    stampBusy = true;
+  function stamp(f, dur) {
     const r = parseFloat(getComputedStyle(f).getPropertyValue('--r')) || 0;
-    const hurry = stampQueue.length > 1;                                // hay cola: más rápido
     const side = figus.indexOf(f) % 2 ? 1 : -1;
-    // Apenas pega, arranca la siguiente; la sacudida del álbum corre aparte.
     gsap.fromTo(f, { opacity: 0, scale: 1.7, rotation: r + side * 12, y: -30 }, {
-      opacity: 1, scale: 1, rotation: r, y: 0, duration: hurry ? 0.16 : 0.26, ease: 'power4.in',
+      opacity: 1, scale: 1, rotation: r, y: 0, duration: dur, ease: 'power4.in',
       onComplete: () => {
         gsap.timeline().to(album, { y: 7, duration: 0.05, ease: 'power1.out' })
           .to(album, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.35)' });
-        gsap.delayedCall(hurry ? 0.02 : 0.06, stampNext);
       },
     });
   }
@@ -253,7 +271,10 @@
 
   if (!reduce) {
     gsap.set(figus, { opacity: 0 });
-    ScrollTrigger.create({ trigger: hofOuter, start: 'top 8%', end: 'bottom top', onUpdate: stampCheck, onEnter: stampCheck });
+    ScrollTrigger.create({
+      trigger: hofOuter, start: 'top bottom', end: 'bottom top',
+      onUpdate: self => { scrollV = self.getVelocity(); stampCheck(); },
+    });
   }
 
   // ===== MAPA: coreografía ===================================================
@@ -263,13 +284,14 @@
   //   0 → GLOBE_END  globo girando y acercándose
   //   GLOBE_END → ARRIVE  descenso satelital hasta la plaza
   //   ARRIVE → 1  la plaza queda quieta y la info aparece por partes (pin, nombre, ubicación, botón)
-  // La sección mide 800vh (700vh de recorrido). K convierte las marcas pensadas para 620vh de
-  // recorrido, así el descenso va a la misma velocidad y lo que sobra queda de hold en la plaza.
-  const K = 620 / 700;
+  // La sección mide 710vh (610vh de recorrido). K convierte las marcas pensadas para 620vh de
+  // recorrido, así el descenso va a la misma velocidad. En la plaza: 4 pasos de ~22vh (tarjeta,
+  // ubicación, botón, foto) y después ~100vh de hold con la foto a la vista.
+  const RANGE = 610;
+  const K = 620 / RANGE;
   const GLOBE_END = 0.4 * K, ARRIVE = 0.68 * K;
   const STAGES = [[0, 'Planeta Tierra'], [0.22 * K, 'Sudamérica'], [0.36 * K, 'Argentina'], [0.47 * K, 'Buenos Aires'], [0.58 * K, 'Bosques de Palermo'], [ARRIVE, '']];
-  // Pasos en la plaza, cada ~25vh de scroll: tarjeta, ubicación, botón, foto. Después, hold largo.
-  const STEP = 25 / 700;
+  const STEP = 22 / RANGE;
   let target = 0, current = 0, rafOn = false;
 
   function applyProgress(p) {
@@ -301,7 +323,8 @@
   function tick() {
     const gap = target - current;
     if (Math.abs(gap) < 0.0005) { current = target; applyProgress(current); rafOn = false; return; }
-    const inMap = current > GLOBE_END && gap > 0;
+    // el tope de velocidad solo hace falta durante el descenso (carga de tiles); en la plaza, no
+    const inMap = current > GLOBE_END && current < ARRIVE && gap > 0;
     const waiting = inMap && window.sunshineMap && window.sunshineMap.loading();
     let step = gap * 0.14;
     if (inMap) step = Math.min(step, waiting ? 0.0035 : 0.006); // descenso acotado: Leaflet mantiene tiles del nivel anterior
