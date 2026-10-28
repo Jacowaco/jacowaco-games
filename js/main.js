@@ -194,6 +194,10 @@
   // El recorrido termina con la figurita 2026 centrada en pantalla.
   // clientWidth descuenta la barra de scroll; innerWidth no.
   const hofLast = album.querySelector('.figu--next');
+  // En celu y pantallas táctiles no se frena la página (pelea con la inercia del dedo y tiembla):
+  // el álbum es una columna con scroll normal y cada figurita se estampa al entrar en pantalla.
+  const hofStack = matchMedia('(max-width: 699px), (pointer: coarse)').matches;
+  document.documentElement.classList.toggle('hof-stack', hofStack);
   // El álbum arranca con la primera figurita en el centro y termina con la 2026 en el centro.
   // Se mide con offsetLeft/offsetWidth (layout puro) para que el estampado, que escala, no altere la cuenta.
   const figus = gsap.utils.toArray('.album .figu');
@@ -205,90 +209,95 @@
   // Carrusel por pasos: al llegar a la sección la página se frena y cada gesto (ruedita, swipe
   // o flecha) lleva a la figurita siguiente, que se estampa en el centro. Así se ven todas aunque
   // scrollees rápido. Después de la 2026, el próximo gesto suelta la página y el scroll sigue normal.
-  function hofLayout() { hofOuter.style.height = Math.round(window.innerHeight * 1.6) + 'px'; } // margen de sticky
-  hofLayout();
-  ScrollTrigger.addEventListener('refreshInit', hofLayout);
   const stamped = new Set();
-  let hofIdx = 0, hofBusy = false, hofLocked = false;
-  const placeAlbum = () => gsap.set(album, { x: xFor(figus[hofIdx]) });
-  placeAlbum();
-  ScrollTrigger.addEventListener('refresh', placeAlbum);
+  if (hofStack) {
+    if (!reduce) figus.forEach((f, i) => ScrollTrigger.create({ trigger: f, start: 'top 78%', once: true, onEnter: () => stamp(i) }));
+  } else {
+    function hofLayout() { hofOuter.style.height = Math.round(window.innerHeight * 1.6) + 'px'; } // margen de sticky
+    hofLayout();
+    ScrollTrigger.addEventListener('refreshInit', hofLayout);
+    let hofIdx = 0, hofBusy = false, hofLocked = false;
+    const placeAlbum = () => gsap.set(album, { x: xFor(figus[hofIdx]) });
+    placeAlbum();
+    ScrollTrigger.addEventListener('refresh', placeAlbum);
 
-  const hofTop = () => Math.round(hofOuter.getBoundingClientRect().top + window.scrollY);
-  function freezePage(on) {
-    document.documentElement.classList.toggle('is-frozen', on);
-  }
-  const hofObs = ScrollTrigger.observe({
-    type: 'wheel,touch', wheelSpeed: -1, tolerance: 12, preventDefault: true,
-    onUp: () => hofStep(1),      // ruedita hacia abajo o swipe hacia arriba
-    onDown: () => hofStep(-1),
-  });
-  hofObs.disable();
-  function hofKeys(e) {
-    if (!hofLocked) return;
-    const next = ['ArrowDown', 'PageDown', ' ', 'Spacebar', 'ArrowRight'].includes(e.key);
-    const prev = ['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key);
-    if (next || prev) { e.preventDefault(); hofStep(next ? 1 : -1); }
-  }
-  window.addEventListener('keydown', hofKeys);
-
-  function hofAllStamped() {
-    figus.forEach((f, i) => stamped.add(i)); gsap.set(figus, { opacity: 1 });
-    hofIdx = figus.length - 1; placeAlbum();
-  }
-  function hofLock() {
-    if (hofLocked || reduce || stamped.size === figus.length) return;
-    // Si ya estás más allá de la sección (recargaste más abajo o saltaste con un link), no frena:
-    // quedan todas pegadas. Llegando con scroll, la sección sigue a la vista (margen del sticky).
-    const pastBy = window.scrollY - hofTop();
-    if (pastBy > hofOuter.offsetHeight - window.innerHeight) { hofAllStamped(); return; }
-    hofLocked = true;
-    hofLockY = hofTop();
-    window.scrollTo(0, hofLockY);
-    freezePage(true);
-    window.addEventListener('scroll', hofHoldScroll);
-    hofObs.enable();
-    if (!stamped.has(hofIdx)) { hofBusy = true; stamp(hofIdx, hofDone); }
-  }
-  // Refuerzo del freno: si algo mueve la página mientras la sección tiene el control (scroll suave
-  // del navegador que sigue animando, arrastrar la barra, inercia del dedo), vuelve a su lugar.
-  let hofLockY = 0;
-  function hofHoldScroll() { if (hofLocked && Math.abs(window.scrollY - hofLockY) > 1) window.scrollTo(0, hofLockY); }
-  function hofRelease(dir) {
-    hofLocked = false;
-    window.removeEventListener('scroll', hofHoldScroll);
-    hofObs.disable();
-    freezePage(false);
-    // el gesto que suelta también mueve un poco la página, para que se sienta continuo
-    window.scrollBy({ top: dir * window.innerHeight * 0.45, behavior: 'smooth' });
-  }
-  function hofDone() { gsap.delayedCall(0.18, () => { hofBusy = false; }); }
-  function hofStep(dir) {
-    if (!hofLocked || hofBusy) return;
-    const last = figus.length - 1;
-    if (dir > 0) {
-      if (!stamped.has(hofIdx)) return;
-      if (hofIdx === last) { hofRelease(1); return; }
-      hofGo(hofIdx + 1);
-    } else {
-      if (hofIdx === 0) { hofRelease(-1); return; }
-      hofGo(hofIdx - 1);
+    const hofTop = () => Math.round(hofOuter.getBoundingClientRect().top + window.scrollY);
+    function freezePage(on) {
+      document.documentElement.classList.toggle('is-frozen', on);
     }
-  }
-  function hofGo(i) {
-    hofBusy = true; hofIdx = i;
-    gsap.to(album, {
-      x: xFor(figus[i]), duration: 0.5, ease: 'power2.inOut',
-      onComplete: () => (stamped.has(i) ? hofDone() : stamp(i, hofDone)),
+    const hofObs = ScrollTrigger.observe({
+      type: 'wheel,touch', wheelSpeed: -1, tolerance: 12, preventDefault: true,
+      onUp: () => hofStep(1),      // ruedita hacia abajo o swipe hacia arriba
+      onDown: () => hofStep(-1),
     });
-  }
+    hofObs.disable();
+    function hofKeys(e) {
+      if (!hofLocked) return;
+      const next = ['ArrowDown', 'PageDown', ' ', 'Spacebar', 'ArrowRight'].includes(e.key);
+      const prev = ['ArrowUp', 'PageUp', 'ArrowLeft'].includes(e.key);
+      if (next || prev) { e.preventDefault(); hofStep(next ? 1 : -1); }
+    }
+    window.addEventListener('keydown', hofKeys);
 
-  ScrollTrigger.create({
-    trigger: hofOuter, start: 'top top', end: 'bottom bottom',
-    onEnter: hofLock,
-    // si llegás desde abajo (o recargaste más abajo), las figuritas ya están todas pegadas
-    onEnterBack: () => { if (!hofLocked) hofAllStamped(); },
-  });
+    function hofAllStamped() {
+      figus.forEach((f, i) => stamped.add(i)); gsap.set(figus, { opacity: 1 });
+      hofIdx = figus.length - 1; placeAlbum();
+    }
+    function hofLock() {
+      if (hofLocked || reduce || stamped.size === figus.length) return;
+      // Si ya estás más allá de la sección (recargaste más abajo o saltaste con un link), no frena:
+      // quedan todas pegadas. Llegando con scroll, la sección sigue a la vista (margen del sticky).
+      const pastBy = window.scrollY - hofTop();
+      if (pastBy > hofOuter.offsetHeight - window.innerHeight) { hofAllStamped(); return; }
+      hofLocked = true;
+      hofLockY = hofTop();
+      window.scrollTo(0, hofLockY);
+      freezePage(true);
+      window.addEventListener('scroll', hofHoldScroll);
+      hofObs.enable();
+      if (!stamped.has(hofIdx)) { hofBusy = true; stamp(hofIdx, hofDone); }
+    }
+    // Refuerzo del freno: si algo mueve la página mientras la sección tiene el control (scroll suave
+    // del navegador que sigue animando, arrastrar la barra, inercia del dedo), vuelve a su lugar.
+    let hofLockY = 0;
+    function hofHoldScroll() { if (hofLocked && Math.abs(window.scrollY - hofLockY) > 1) window.scrollTo(0, hofLockY); }
+    function hofRelease(dir) {
+      hofLocked = false;
+      window.removeEventListener('scroll', hofHoldScroll);
+      hofObs.disable();
+      freezePage(false);
+      // el gesto que suelta también mueve un poco la página, para que se sienta continuo
+      window.scrollBy({ top: dir * window.innerHeight * 0.45, behavior: 'smooth' });
+    }
+    function hofDone() { gsap.delayedCall(0.18, () => { hofBusy = false; }); }
+    function hofStep(dir) {
+      if (!hofLocked || hofBusy) return;
+      const last = figus.length - 1;
+      if (dir > 0) {
+        if (!stamped.has(hofIdx)) return;
+        if (hofIdx === last) { hofRelease(1); return; }
+        hofGo(hofIdx + 1);
+      } else {
+        if (hofIdx === 0) { hofRelease(-1); return; }
+        hofGo(hofIdx - 1);
+      }
+    }
+    function hofGo(i) {
+      hofBusy = true; hofIdx = i;
+      gsap.to(album, {
+        x: xFor(figus[i]), duration: 0.5, ease: 'power2.inOut',
+        onComplete: () => (stamped.has(i) ? hofDone() : stamp(i, hofDone)),
+      });
+    }
+
+    ScrollTrigger.create({
+      trigger: hofOuter, start: 'top top', end: 'bottom bottom',
+      onEnter: hofLock,
+      // si llegás desde abajo (o recargaste más abajo), las figuritas ya están todas pegadas
+      onEnterBack: () => { if (!hofLocked) hofAllStamped(); },
+    });
+
+  }
 
   // Figurita estampada: cae grande y torcida en el centro de la pantalla, pega y sacude el álbum.
   function stamp(i, done) {
@@ -299,8 +308,9 @@
     gsap.fromTo(f, { opacity: 0, scale: 1.7, rotation: r + side * 12, y: -30 }, {
       opacity: 1, scale: 1, rotation: r, y: 0, duration: 0.26, ease: 'power4.in',
       onComplete: () => {
-        gsap.timeline().to(album, { y: 7, duration: 0.05, ease: 'power1.out' })
-          .to(album, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.35)' });
+        const target = hofStack ? f : album;
+        gsap.timeline().to(target, { y: 7, duration: 0.05, ease: 'power1.out' })
+          .to(target, { y: 0, duration: 0.25, ease: 'elastic.out(1, 0.35)' });
         if (done) done();
       },
     });

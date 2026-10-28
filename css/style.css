@@ -150,6 +150,14 @@ a{color:inherit}
 .album{--album-pad:calc(var(--gutter) + clamp(16px,4vw,48px));position:relative;display:flex;align-items:center;gap:clamp(18px,3vw,36px);width:max-content;will-change:transform;
   padding:14px var(--album-pad) 14px max(var(--album-pad),calc((100vw - var(--maxw)) / 2 + var(--gutter)))}
 .album .figu{flex:0 0 auto;width:clamp(220px,min(62vw,40svh),340px)}
+/* Celu / táctil: el álbum es una columna en zigzag con scroll normal (ver main.js, hofStack) */
+.hof-stack .hof__outer{height:auto!important;overflow-x:clip} /* las figuritas sin pegar esperan agrandadas */
+.hof-stack .hof__stage{position:static;height:auto;overflow:visible;padding-top:clamp(56px,9vh,96px)}
+.hof-stack .album{flex-direction:column;width:auto;padding:14px var(--gutter);gap:clamp(28px,5vh,44px);transform:none}
+.hof-stack .album .figu{width:min(76vw,340px)}
+.hof-stack .album .figu:nth-child(odd){margin-right:auto}
+.hof-stack .album .figu:nth-child(even){margin-left:auto}
+.hof-stack .album .figu--next{margin-inline:auto;align-self:auto;min-height:calc(min(76vw,340px) * 1.4)}
 .hof__after{padding:clamp(24px,5svh,56px) var(--gutter) clamp(64px,10vh,120px)}
 .figu{position:relative;background:var(--white);padding:8px 8px 12px;transform:rotate(var(--r,0deg));box-shadow:0 1px 0 rgba(0,0,0,.2),0 10px 18px -12px rgba(0,0,0,.45);display:flex;flex-direction:column}
 .figu:nth-child(7n+1){--r:-1.6deg}.figu:nth-child(7n+2){--r:1.2deg}.figu:nth-child(7n+3){--r:-.6deg}
