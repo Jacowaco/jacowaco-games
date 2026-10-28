@@ -21,6 +21,10 @@ npx serve .
 
 ## Publicar
 
+Antes de publicar, subir el número `?v=` de los links a `css/style.css` y `js/*.js` en `index.html`
+(por ejemplo de `?v=8` a `?v=9`). GitHub Pages hace que el navegador guarde los archivos 10 minutos;
+con la versión nueva en el link, los celus bajan el CSS y el JS nuevos en vez de usar los viejos.
+
 ```
 git add -A && git commit -m "..." && git push
 ```
