@@ -29,19 +29,26 @@ body{min-height:100svh;display:flex;flex-direction:column}
 .fx-yo__n{font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:32px;line-height:.9}
 .fx-yo__quien{font-family:var(--f-type);font-weight:700;font-size:14px;margin-top:4px}
 .fx-nombre{display:grid;gap:12px;margin-top:24px}
-.fx-progreso{margin-top:20px;display:grid;grid-template-columns:auto 1fr;align-items:end;gap:4px 12px}
-.fx-progreso__n{font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:72px;line-height:.8}
-.fx-progreso__n b{font-weight:900}
-.fx-progreso__t{font-family:var(--f-type);font-weight:700;font-size:15px;padding-bottom:6px}
-.fx-barra{grid-column:1/-1;height:14px;background:var(--white);border:2px solid var(--ink);border-radius:3px;overflow:hidden}
+.fx-barra{height:14px;background:var(--white);border:2px solid var(--ink);border-radius:3px;overflow:hidden}
 .fx-barra span{display:block;height:100%;background:var(--ok);transition:width .4s ease}
 .fx-listo{margin-top:18px;padding:18px;background:var(--grain),var(--yellow);border:3px solid var(--ink);transform:rotate(-1.5deg);text-align:center}
 .fx-listo p{font-family:var(--f-hand);font-size:26px}
 .fx-listo b{display:block;font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:64px;line-height:.9}
-.fx-tablero{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 14px;margin:18px 0 6px;padding:10px 12px;background:var(--white);border:2px dashed var(--ink)}
-.fx-tablero li{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;font-family:var(--f-type);font-size:14px}
-.fx-tablero li.is-yo{font-weight:700}
-.fx-tablero .cinta{--h:14px}
+/* La carrera: x/N de cada equipo, grande, el propio resaltado */
+.fx-carrera__t{margin:26px 0 12px}
+.fx-carrera{list-style:none;display:grid;gap:10px}
+.fx-carrera li{position:relative;display:grid;grid-template-columns:30px 52px 1fr auto;align-items:center;gap:6px 12px;padding:12px 14px 14px;background:var(--white);border:2px solid var(--ink);border-radius:4px}
+.fx-carrera li.is-yo{background:var(--grain),var(--yellow);box-shadow:4px 4px 0 var(--ink);transform:rotate(-.6deg)}
+.fx-carrera li.is-completo .fx-barra span{background:var(--pink)}
+.fx-carrera .cinta{--h:20px}
+.fx-carrera .fx-barra{grid-column:1/-1}
+.fx-carrera__pos{font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:34px;line-height:.8}
+.fx-carrera__eq{font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:30px;line-height:1}
+.fx-carrera__eq small{font:700 13px var(--f-type);text-transform:none;margin-left:6px}
+.fx-carrera__n{font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:30px;line-height:.8;color:var(--muted)}
+.fx-carrera__n b{font-size:60px;color:var(--ink)}
+.fx-carrera__rev{grid-column:1/-1;font:700 14px var(--f-type)}
+.fx-carrera .fx-sello{color:#c4005a;font-size:20px;top:-16px;right:10px}
 
 /* Esperando */
 .fx-espera{margin:26px 0 10px}

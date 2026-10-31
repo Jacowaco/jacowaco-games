@@ -51,6 +51,7 @@
       return h;
     },
     async rpc(fn, args, signal) {
+      if (!this.activo) throw new Error('Supabase no está configurado en fotos/config.js');
       const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, {
         method: 'POST', headers: this.headers({ 'Content-Type': 'application/json' }), body: JSON.stringify(args || {}), signal,
       });

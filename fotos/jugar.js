@@ -32,7 +32,7 @@
     const cab = cabecera();
     if (!datos.inicio || !datos.consignas) {
       app.innerHTML = cab + `<div class="fx-espera"><p class="fx-espera__t">Esperando<br>la largada</p>
-        <p class="sub">Las consignas aparecen acá cuando arranque el juego. No hace falta recargar.</p></div>` + tablero();
+        <p class="sub">Las consignas aparecen acá cuando arranque el juego. No hace falta recargar.</p></div>`;
       return;
     }
     const total = datos.consignas.length;
@@ -40,13 +40,8 @@
     const yo = rk.find(r => r.equipo.id === equipo);
     const puesto = rk.filter(r => r.completo).indexOf(yo) + 1;
     app.innerHTML = cab + `
-      <div class="fx-progreso">
-        <p class="fx-progreso__n"><b>${yo.hechas}</b>/${total}</p>
-        <p class="fx-progreso__t">aprobadas${yo.enRevision ? ` · ${yo.enRevision} en revisión` : ''}</p>
-        <div class="fx-barra"><span style="width:${total ? yo.hechas / total * 100 : 0}%"></span></div>
-      </div>
       ${yo.completo ? `<div class="fx-listo"><p>¡Completaron todo!</p><b>Llegaron ${puesto}º</b></div>` : ''}
-      ${tablero(rk, total)}
+      ${carrera(rk, total)}
       <ol class="fx-lista">${datos.consignas.map((txt, i) => tarjeta(i + 1, txt)).join('')}</ol>`;
   }
 
@@ -73,12 +68,23 @@
       <button class="fx-link" data-cambiar>Cambiar</button></div>`;
   }
 
-  // Cuántas lleva cada equipo (sin fotos: no se ven las de los rivales)
-  function tablero(rk, total) {
-    if (!rk) return '';
-    return `<ul class="fx-tablero">${rk.map(r => `
-      <li class="${r.equipo.id === equipo ? 'is-yo' : ''}"><span class="cinta cinta--${r.equipo.id}"></span>
-        <b>${esc(r.equipo.nombre)}</b><span>${r.hechas}/${total}</span></li>`).join('')}</ul>`;
+  // La carrera: cuántas lleva cada equipo, ordenados (sin fotos: no se ven las de los rivales)
+  function carrera(rk, total) {
+    let llegada = 0;
+    return `<h2 class="fx-h2 fx-carrera__t">La carrera</h2>
+      <ol class="fx-carrera">${rk.map((r, i) => {
+        const soy = r.equipo.id === equipo;
+        return `
+        <li class="${soy ? 'is-yo' : ''} ${r.completo ? 'is-completo' : ''}">
+          <span class="fx-carrera__pos">${i + 1}</span>
+          <span class="cinta cinta--${r.equipo.id}"></span>
+          <span class="fx-carrera__eq">${esc(r.equipo.nombre)}${soy ? '<small>vos</small>' : ''}</span>
+          <span class="fx-carrera__n"><b>${r.hechas}</b>/${total}</span>
+          <div class="fx-barra"><span style="width:${total ? r.hechas / total * 100 : 0}%"></span></div>
+          ${soy && r.enRevision ? `<p class="fx-carrera__rev">${r.enRevision} en revisión</p>` : ''}
+          ${r.completo ? `<span class="fx-sello">Llegó ${++llegada}º</span>` : ''}
+        </li>`;
+      }).join('')}</ol>`;
   }
 
   const SELLOS = { aprobada: '✓ Aprobada', pendiente: 'En revisión', rechazada: 'Rechazada' };
