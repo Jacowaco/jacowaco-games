@@ -201,3 +201,11 @@ button.fx-mini:disabled{cursor:default}
 .fx-visor[hidden]{display:none}
 .fx-visor img{max-width:100%;max-height:calc(100svh - 70px);object-fit:contain;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .fx-visor span{font:700 13px var(--f-type);color:var(--paper)}
+
+/* Panel: selector entre el tablero del cumple y la caza de fotos */
+.fx-modo{display:grid;grid-template-columns:1fr 1fr;border:3px solid var(--ink);border-radius:6px;overflow:hidden;margin-bottom:18px}
+.fx-modo button{background:var(--paper);border:0;padding:14px 8px 12px;font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:22px;line-height:1;color:var(--ink);cursor:pointer}
+.fx-modo button + button{border-left:3px solid var(--ink)}
+.fx-modo button[aria-pressed="true"]{background:var(--grain),var(--pink)}
+.fx-modo .fx-badge{font-family:var(--f-type);font-size:13px;vertical-align:3px;background:var(--ink);color:var(--white)}
+.fx-salir{margin-top:32px;text-align:center}

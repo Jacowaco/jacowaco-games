@@ -98,6 +98,7 @@
   function renderRevisar() {
     const pend = datos.fotos.filter(f => f.estado === 'pendiente');
     $('#badge').textContent = pend.length || '';
+    $('#badgeModo').textContent = pend.length || '';
     $('#revisar').innerHTML = pend.length
       ? pend.map(f => fotoCard(f, true)).join('')
       : `<p class="fx-msg">No hay fotos para revisar.</p>`;
@@ -198,7 +199,8 @@
   document.addEventListener('click', e => {
     const t = e.target.closest('button, [data-cerrar]');
     if (!t) return;
-    if (t.dataset.ver) F.verFoto(t.dataset.ver);
+    if (t.dataset.modo) elegirModo(t.dataset.modo);
+    else if (t.dataset.ver) F.verFoto(t.dataset.ver);
     else if (t.dataset.vivo) mostrarVivo(t.dataset.vivo === '1');
     else if (t.dataset.editarJuego) editarJuego(t.dataset.editarJuego);
     else if (t.dataset.borrarJuego) borrarJuego(t.dataset.borrarJuego);
@@ -382,6 +384,18 @@
     if (prompt('Escribí BORRAR para confirmar') !== 'BORRAR') return;
     accionTablero(null, () => F.tablero.reiniciar(clave));
   });
+
+  // ===== PARTES DEL PANEL: tablero del cumple / caza de fotos ================
+  const modoGuardado = {
+    get() { try { return localStorage.getItem('panel-modo'); } catch (e) { return null; } },
+    set(v) { try { localStorage.setItem('panel-modo', v); } catch (e) {} },
+  };
+  function elegirModo(modo) {
+    document.querySelectorAll('[data-modo]').forEach(b => b.setAttribute('aria-pressed', b.dataset.modo === modo));
+    document.querySelectorAll('[data-modo-panel]').forEach(p => { p.hidden = p.dataset.modoPanel !== modo; });
+    modoGuardado.set(modo);
+  }
+  elegirModo(modoGuardado.get() === 'fotos' ? 'fotos' : 'tablero');
 
   // ===== ARRANQUE ===========================================================
   if (clave) entrar(clave); else $('#login').hidden = false;

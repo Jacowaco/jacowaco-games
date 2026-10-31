@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Panel · Caza de fotos</title>
+  <title>Panel del cumple · Jacowaco's Games</title>
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#191816">
   <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
@@ -11,13 +11,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css?v=9">
-  <link rel="stylesheet" href="fotos.css?v=6">
+  <link rel="stylesheet" href="fotos.css?v=7">
 </head>
 <body class="paper">
 
 <header class="fx-top fx-top--admin">
   <p class="tape">Panel</p>
-  <h1 class="fx-title">Caza de<br>fotos</h1>
+  <h1 class="fx-title">Panel del<br>cumple</h1>
   <p class="fx-salud" id="salud"></p>
 </header>
 
@@ -29,35 +29,13 @@
 </form>
 
 <main class="fx-main" id="panel" hidden>
-  <section class="fx-sec" id="largada"></section>
-
-  <nav class="fx-tabs" role="tablist">
-    <button role="tab" data-tab="revisar" aria-selected="true">Revisar <span class="fx-badge" id="badge"></span></button>
-    <button role="tab" data-tab="ranking">Ranking</button>
-    <button role="tab" data-tab="grilla">Grilla</button>
-    <button role="tab" data-tab="consignas">Consignas</button>
-    <button role="tab" data-tab="tablero">Tablero</button>
+  <!-- Dos partes: el tablero de toda la tarde y la caza de fotos (un juego más) -->
+  <nav class="fx-modo">
+    <button data-modo="tablero" aria-pressed="true">Tablero del cumple</button>
+    <button data-modo="fotos" aria-pressed="false">Caza de fotos <span class="fx-badge" id="badgeModo"></span></button>
   </nav>
 
-  <section class="fx-sec" data-panel="revisar" id="revisar"></section>
-  <section class="fx-sec" data-panel="ranking" id="ranking" hidden></section>
-  <section class="fx-sec" data-panel="grilla" id="grilla" hidden></section>
-  <section class="fx-sec" data-panel="consignas" hidden>
-    <p class="sub">Una por casillero. El número de cada consigna es su posición: una vez largado el juego no las reordenes ni borres del medio, porque las fotos quedan atadas al número.</p>
-    <ol class="fx-editor" id="editor"></ol>
-    <div class="fx-fila">
-      <button class="btn btn--ghost" id="agregar" type="button">+ Agregar</button>
-      <button class="btn btn--pink" id="guardar" type="button">Guardar</button>
-    </div>
-    <p class="fx-nota" id="guardarMsg"></p>
-    <div class="fx-peligro">
-      <p class="label">Zona de peligro</p>
-      <p class="fx-nota">Borra todas las fotos y vuelve a "esperando largada". Usalo después de probar, antes del juego de verdad. Las consignas quedan.</p>
-      <button class="btn btn--ghost" id="reiniciar" type="button">Borrar todas las fotos</button>
-      <button class="fx-link" id="salir" type="button">Cerrar sesión</button>
-    </div>
-  </section>
-  <section class="fx-sec" data-panel="tablero" hidden>
+  <div data-modo-panel="tablero">
     <div id="vivoEstado"></div>
     <form class="fx-juego" id="juegoForm">
       <p class="label" id="juegoTitulo">Cargar juego</p>
@@ -76,7 +54,38 @@
       <p class="fx-nota">Borra todos los juegos cargados y todos los anotados. Usalo después de probar.</p>
       <button class="btn btn--ghost" id="reiniciarTablero" type="button">Borrar tablero y anotados</button>
     </div>
-  </section>
+  </div>
+
+  <div data-modo-panel="fotos" hidden>
+    <section class="fx-sec" id="largada"></section>
+
+    <nav class="fx-tabs" role="tablist">
+      <button role="tab" data-tab="revisar" aria-selected="true">Revisar <span class="fx-badge" id="badge"></span></button>
+      <button role="tab" data-tab="ranking">Ranking</button>
+      <button role="tab" data-tab="grilla">Grilla</button>
+      <button role="tab" data-tab="consignas">Consignas</button>
+    </nav>
+
+    <section class="fx-sec" data-panel="revisar" id="revisar"></section>
+    <section class="fx-sec" data-panel="ranking" id="ranking" hidden></section>
+    <section class="fx-sec" data-panel="grilla" id="grilla" hidden></section>
+    <section class="fx-sec" data-panel="consignas" hidden>
+      <p class="sub">Una por casillero. El número de cada consigna es su posición: una vez largado el juego no las reordenes ni borres del medio, porque las fotos quedan atadas al número.</p>
+      <ol class="fx-editor" id="editor"></ol>
+      <div class="fx-fila">
+        <button class="btn btn--ghost" id="agregar" type="button">+ Agregar</button>
+        <button class="btn btn--pink" id="guardar" type="button">Guardar</button>
+      </div>
+      <p class="fx-nota" id="guardarMsg"></p>
+      <div class="fx-peligro">
+        <p class="label">Zona de peligro</p>
+        <p class="fx-nota">Borra todas las fotos y vuelve a "esperando largada". Usalo después de probar, antes del juego de verdad. Las consignas quedan.</p>
+        <button class="btn btn--ghost" id="reiniciar" type="button">Borrar todas las fotos</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="fx-salir"><button class="fx-link" id="salir" type="button">Cerrar sesión</button></p>
 </main>
 
 <div class="fx-modal" id="modal" hidden>
@@ -88,6 +97,6 @@
 
 <script src="config.js?v=4"></script>
 <script src="datos.js?v=6"></script>
-<script src="admin.js?v=6"></script>
+<script src="admin.js?v=7"></script>
 </body>
 </html>
