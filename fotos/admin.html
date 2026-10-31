@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Panel · Caza de fotos</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#191816">
+  <link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=8">
+  <link rel="stylesheet" href="fotos.css?v=1">
+</head>
+<body class="paper">
+
+<header class="fx-top fx-top--admin">
+  <p class="tape">Panel</p>
+  <h1 class="fx-title">Caza de<br>fotos</h1>
+  <p class="fx-salud" id="salud"></p>
+</header>
+
+<form class="fx-main fx-login" id="login" hidden>
+  <label class="label" for="clave">Clave del panel</label>
+  <input class="fx-input" id="clave" type="password" autocomplete="current-password" required>
+  <button class="btn">Entrar</button>
+  <p class="fx-error" id="loginError"></p>
+</form>
+
+<main class="fx-main" id="panel" hidden>
+  <section class="fx-sec" id="largada"></section>
+
+  <nav class="fx-tabs" role="tablist">
+    <button role="tab" data-tab="revisar" aria-selected="true">Revisar <span class="fx-badge" id="badge"></span></button>
+    <button role="tab" data-tab="ranking">Ranking</button>
+    <button role="tab" data-tab="grilla">Grilla</button>
+    <button role="tab" data-tab="consignas">Consignas</button>
+  </nav>
+
+  <section class="fx-sec" data-panel="revisar" id="revisar"></section>
+  <section class="fx-sec" data-panel="ranking" id="ranking" hidden></section>
+  <section class="fx-sec" data-panel="grilla" id="grilla" hidden></section>
+  <section class="fx-sec" data-panel="consignas" hidden>
+    <p class="sub">Una por casillero. El número de cada consigna es su posición: una vez largado el juego no las reordenes ni borres del medio, porque las fotos quedan atadas al número.</p>
+    <ol class="fx-editor" id="editor"></ol>
+    <div class="fx-fila">
+      <button class="btn btn--ghost" id="agregar" type="button">+ Agregar</button>
+      <button class="btn btn--pink" id="guardar" type="button">Guardar</button>
+    </div>
+    <p class="fx-nota" id="guardarMsg"></p>
+    <div class="fx-peligro">
+      <p class="label">Zona de peligro</p>
+      <p class="fx-nota">Borra todas las fotos y vuelve a "esperando largada". Usalo después de probar, antes del juego de verdad. Las consignas quedan.</p>
+      <button class="btn btn--ghost" id="reiniciar" type="button">Borrar todas las fotos</button>
+      <button class="fx-link" id="salir" type="button">Cerrar sesión</button>
+    </div>
+  </section>
+</main>
+
+<div class="fx-modal" id="modal" hidden>
+  <div class="fx-modal__box">
+    <button class="fx-modal__x" data-cerrar aria-label="Cerrar">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="config.js?v=1"></script>
+<script src="datos.js?v=1"></script>
+<script src="admin.js?v=1"></script>
+</body>
+</html>

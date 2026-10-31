@@ -13,6 +13,10 @@ Publicada en https://jacowaco.github.io/jacowaco-games/ (GitHub Pages, rama `mai
 - **Fotos nuevas**: poner los jpg en `originales/` (no se sube a git) y correr `npm install && node tools/optimize.mjs`
   para regenerar `img/*.webp`. Para que aparezcan en el marquee, agregarlas a `FOTOS` en `js/main.js`.
 
+## Caza de fotos
+
+Juego de fotos por equipos en `fotos/` (página de equipos + panel). Instalación y uso en [fotos/LEEME.md](fotos/LEEME.md).
+
 ## Probar local
 
 ```
