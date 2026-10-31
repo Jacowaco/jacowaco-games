@@ -10,14 +10,13 @@
   const camara = $('#camara');
   if (C.soloCamara) camara.setAttribute('capture', 'environment');
 
-  // El equipo sale del link (?equipo=ninja) o de lo que eligió antes en este celu
-  const guardado = {
-    get() { try { return localStorage.getItem('fotos-equipo'); } catch (e) { return null; } },
-    set(v) { try { v ? localStorage.setItem('fotos-equipo', v) : localStorage.removeItem('fotos-equipo'); } catch (e) {} },
-  };
+  // El equipo sale del link (?equipo=ninja) o de lo que eligió antes en este celu (acá o en el tablero en vivo)
+  const guardado = F.yo.equipo;
+  const guardadoNombre = F.yo.nombre;
   const deLink = new URLSearchParams(location.search).get('equipo');
   if (deLink && C.equipos.some(e => e.id === deLink)) guardado.set(deLink);
   let equipo = C.equipos.some(e => e.id === guardado.get()) ? guardado.get() : null;
+  let nombre = guardadoNombre.get();
 
   let datos = null;     // último estado de los backends
   const local = {};     // consigna → { fase: 'subiendo'|'error'|'enviada', file, msg }
@@ -27,6 +26,8 @@
   // ===== RENDER =============================================================
   function render() {
     if (!equipo) return renderElegir();
+    // El refresco no pisa el formulario mientras escribe
+    if (!nombre) { if (!$('#nombreForm')) renderNombre(); return; }
     if (!datos) return;
     const cab = cabecera();
     if (!datos.inicio || !datos.consignas) {
@@ -56,9 +57,19 @@
       </div>`;
   }
 
-  function cabecera() {
+  function renderNombre() {
+    app.innerHTML = cabecera(false) + `
+      <form class="fx-nombre" id="nombreForm">
+        <label class="label" for="nombre">¿Cómo te llamás?</label>
+        <input class="fx-input" id="nombre" maxlength="30" autocomplete="given-name" required>
+        <button class="btn">Listo</button>
+      </form>`;
+  }
+
+  function cabecera(conNombre = true) {
     return `<div class="fx-yo"><span class="cinta cinta--${equipo}"></span>
-      <p class="fx-yo__n">Equipo ${esc(F.nombreEquipo(equipo))}</p>
+      <div><p class="fx-yo__n">Equipo ${esc(F.nombreEquipo(equipo))}</p>
+      ${conNombre ? `<p class="fx-yo__quien">Sos ${esc(nombre)}</p>` : ''}</div>
       <button class="fx-link" data-cambiar>Cambiar</button></div>`;
   }
 
@@ -80,6 +91,8 @@
     }
     const l = local[n] && local[n].fase !== 'enviada' ? local[n] : null;
     const mini = miniaturas[n];
+    // Quién mandó la foto que define el estado (la última de ese estado)
+    const quien = datos.fotos.filter(f => f.equipo === equipo && f.consigna === n && f.estado === est).pop();
     let accion = '';
     if (l && l.fase === 'subiendo') accion = `<p class="fx-subiendo">Subiendo…</p>`;
     else if (l && l.fase === 'error') accion = `<p class="fx-error">${esc(l.msg)}</p>
@@ -94,6 +107,7 @@
         <p class="fx-card__txt">${esc(txt)}</p>
         ${mini ? `<img class="fx-card__mini" src="${mini}" alt="">` : ''}
         ${est !== 'vacia' && !(l && l.fase) ? `<span class="fx-sello">${SELLOS[est]}</span>` : ''}
+        ${quien && quien.autor && !l ? `<p class="fx-nota fx-card__quien">Foto de ${esc(quien.autor)} · ${F.hora(quien.creada).slice(0, 5)}</p>` : ''}
         ${accion ? `<div class="fx-card__acc">${accion}</div>` : ''}
       </li>`;
   }
@@ -125,7 +139,7 @@
     render();
     try {
       const blob = await F.comprimir(file);
-      await F.subir(equipo, n, blob);
+      await F.subir(equipo, n, nombre, blob);
       local[n] = { fase: 'enviada' };
       render();
       refrescar();
@@ -142,12 +156,14 @@
     if (t.dataset.equipo) {
       equipo = t.dataset.equipo;
       guardado.set(equipo);
+      F.registrarme();
       render();
       refrescar();
     } else if ('cambiar' in t.dataset) {
-      if (!confirm('¿Cambiar de equipo?')) return;
-      equipo = null;
+      if (!confirm('¿Cambiar de equipo o de nombre?')) return;
+      equipo = nombre = null;
       guardado.set(null);
+      guardadoNombre.set(null);
       render();
     } else if (t.dataset.foto) {
       consignaActual = Number(t.dataset.foto);
@@ -156,6 +172,16 @@
       const n = Number(t.dataset.reintentar);
       subir(n, local[n].file);
     }
+  });
+
+  app.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('#nombre').value.trim().slice(0, 30);
+    if (!v) return;
+    nombre = v;
+    guardadoNombre.set(v);
+    F.registrarme();
+    render();
   });
 
   camara.addEventListener('change', () => {
@@ -167,6 +193,7 @@
   });
 
   render();
+  F.registrarme();
   if (equipo) refrescar();
   setInterval(() => { if (equipo && !document.hidden) refrescar(); }, 8000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && equipo) refrescar(); });

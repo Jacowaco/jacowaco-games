@@ -413,6 +413,22 @@
     + '&location=' + encodeURIComponent(EVENT.location)
     + '&details=' + encodeURIComponent(EVENT.details);
 
+  // ===== TABLERO EN VIVO: el botón aparece cuando se prende desde el panel (fotos/admin.html) =====
+  const vivoBtn = $('#vivoBtn');
+  const SB = window.FOTOS_CONFIG && window.FOTOS_CONFIG.supabase;
+  async function chequearVivo() {
+    try {
+      const r = await fetch(SB.url + '/rest/v1/rpc/vivo', {
+        method: 'POST', headers: { apikey: SB.key, 'Content-Type': 'application/json' }, body: '{}',
+      });
+      vivoBtn.hidden = !(r.ok && (await r.json()) === true);
+    } catch (e) { /* sin señal: queda como estaba */ }
+  }
+  if (vivoBtn && SB && SB.url) {
+    chequearVivo();
+    setInterval(() => { if (!document.hidden) chequearVivo(); }, 60000);
+  }
+
   // Recalcular al cargar fuentes/imágenes
   window.addEventListener('load', () => ScrollTrigger.refresh());
 })();

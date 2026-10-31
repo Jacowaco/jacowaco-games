@@ -27,6 +27,8 @@
       $('#panel').hidden = false;
       aplicar(d);
       cargarEditor();
+      armarPuestos();
+      cargarTablero();
       return true;
     } catch (e) {
       const malaClave = /clave/i.test(e.message);
@@ -51,6 +53,7 @@
     if (pidiendo || !clave) return;
     pidiendo = true;
     try {
+      cargarTablero();
       aplicar(await F.admin(clave));
     } catch (e) {
       $('#salud').innerHTML = `<span class="is-mal">Sin conexión: ${esc(e.message)}</span>`;
@@ -108,7 +111,7 @@
         <div class="fx-foto__info">
           ${conContexto ? `<p class="fx-foto__eq"><span class="cinta cinta--${esc(f.equipo)}"></span>${esc(F.nombreEquipo(f.equipo))}</p>
           <p class="fx-foto__c"><b>${f.consigna}.</b> ${esc(textoConsigna(f.consigna))}</p>` : ''}
-          <p class="fx-nota">Subida ${F.hora(f.creada)} · ${f.fuente === 'google' ? 'Google' : 'Supabase'} · ${ESTADOS[f.estado] || esc(f.estado)}
+          <p class="fx-nota">Subida ${F.hora(f.creada)}${f.autor ? ' por <b>' + esc(f.autor) + '</b>' : ''} · ${f.fuente === 'google' ? 'Google' : 'Supabase'} · ${ESTADOS[f.estado] || esc(f.estado)}
             ${yaAprobada ? ' · <b>ya tienen otra aprobada</b>' : ''}</p>
           <div class="fx-fila">
             ${f.estado !== 'aprobada' ? `<button class="btn fx-ok" data-revisar="aprobada" data-id="${esc(f.id)}">✓ Aprobar</button>` : ''}
@@ -195,7 +198,11 @@
   document.addEventListener('click', e => {
     const t = e.target.closest('button, [data-cerrar]');
     if (!t) return;
-    if (t.dataset.revisar) revisar(t.dataset.id, t.dataset.revisar);
+    if (t.dataset.vivo) mostrarVivo(t.dataset.vivo === '1');
+    else if (t.dataset.editarJuego) editarJuego(t.dataset.editarJuego);
+    else if (t.dataset.borrarJuego) borrarJuego(t.dataset.borrarJuego);
+    else if (t.dataset.borrarJugador) borrarJugador(t.dataset.borrarJugador);
+    else if (t.dataset.revisar) revisar(t.dataset.id, t.dataset.revisar);
     else if (t.dataset.largar) largar(t.dataset.largar === '1');
     else if (t.dataset.celda) { const [eq, n] = t.dataset.celda.split(':'); abrirCelda(eq, Number(n)); }
     else if ('cerrar' in t.dataset) { celdaAbierta = null; $('#modal').hidden = true; }
@@ -258,6 +265,121 @@
   $('#salir').addEventListener('click', () => {
     sesion.set(null);
     location.reload();
+  });
+
+  // ===== TABLERO DEL CUMPLE (solo Supabase) =================================
+  let tab = null;
+  let firmaTablero = '';
+  let juegoEditando = null;
+
+  async function cargarTablero() {
+    try {
+      const t = await F.tablero.admin(clave);
+      const firma = JSON.stringify(t);
+      if (firma === firmaTablero) return;
+      firmaTablero = firma;
+      tab = t;
+      renderTablero();
+    } catch (e) {
+      $('#tableroAdmin').innerHTML = `<p class="fx-error">No se pudo leer el tablero: ${esc(e.message)}</p>`;
+    }
+  }
+
+  function renderTablero() {
+    $('#vivoEstado').innerHTML = tab.vivo
+      ? `<p class="fx-largada"><b>Visible:</b> el botón "Tablero en vivo" aparece en la landing.</p>
+         <button class="fx-link" data-vivo="0">Ocultarlo de la landing</button>`
+      : `<p class="fx-largada">El botón "Tablero en vivo" está <b>oculto</b> en la landing. La página ya funciona si pasás el link.</p>
+         <button class="btn fx-largar" data-vivo="1">Mostrar en la landing</button>`;
+    $('#tableroAdmin').innerHTML = `
+      <h2 class="fx-h2">Posiciones</h2>
+      ${F.htmlPosiciones(tab.juegos)}
+      <h2 class="fx-h2">Juegos cargados</h2>
+      ${tab.juegos.length ? `<ol class="fx-juegos">${tab.juegos.map(j => `
+        <li><div><b>${esc(j.nombre)}</b>${j.doble ? ' <b class="fx-x2">×2</b>' : ''}
+          <p class="fx-nota">${C.equipos.slice().sort((a, b) => (j.puestos[a.id] || 9) - (j.puestos[b.id] || 9))
+            .map(e => `${j.puestos[e.id] ? j.puestos[e.id] + 'º' : '–'} ${esc(e.nombre)} (${F.puntos(j, e.id)})`).join(' · ')}</p></div>
+          <div class="fx-fila"><button class="fx-link" data-editar-juego="${esc(j.id)}">Editar</button>
+          <button class="fx-link" data-borrar-juego="${esc(j.id)}">Borrar</button></div></li>`).join('')}</ol>`
+        : '<p class="fx-msg">Ninguno todavía.</p>'}
+      <h2 class="fx-h2">Anotados (${tab.jugadores.length})</h2>
+      <div class="fx-roster">${C.equipos.map(e => {
+        const js = tab.jugadores.filter(j => j.equipo === e.id);
+        return `<div><p class="fx-roster__eq"><span class="cinta cinta--${e.id}"></span>${esc(e.nombre)} <small>${js.length}</small></p>
+          <p class="fx-roster__nombres">${js.map(j => `<span class="fx-anotado">${esc(j.nombre)}<button data-borrar-jugador="${esc(j.id)}" aria-label="Borrar a ${esc(j.nombre)}">✕</button></span>`).join('')
+            || '<span class="fx-nota">Nadie</span>'}</p></div>`;
+      }).join('')}</div>`;
+  }
+
+  function armarPuestos(puestos = {}) {
+    $('#juegoPuestos').innerHTML = C.equipos.map(e => `
+      <div class="fx-puesto"><span class="cinta cinta--${e.id}"></span><b>${esc(e.nombre)}</b>
+        <div class="fx-seg">${F.PUNTOS.map((pts, i) => `<label><input type="radio" name="p-${e.id}" value="${i + 1}" ${puestos[e.id] === i + 1 ? 'checked' : ''}>
+          <span>${i + 1}º</span></label>`).join('')}</div></div>`).join('');
+  }
+
+  function limpiarJuego() {
+    juegoEditando = null;
+    $('#juegoForm').reset();
+    armarPuestos();
+    $('#juegoTitulo').textContent = 'Cargar juego';
+    $('#juegoCancelar').hidden = true;
+  }
+
+  function editarJuego(id) {
+    const j = tab.juegos.find(x => x.id === id);
+    if (!j) return;
+    juegoEditando = id;
+    $('#juegoNombre').value = j.nombre;
+    $('#juegoDoble').checked = j.doble;
+    armarPuestos(j.puestos);
+    $('#juegoTitulo').textContent = 'Editando: ' + j.nombre;
+    $('#juegoCancelar').hidden = false;
+    $('#juegoForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('#juegoCancelar').addEventListener('click', limpiarJuego);
+
+  $('#juegoForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const puestos = {};
+    C.equipos.forEach(eq => {
+      const r = $(`input[name="p-${eq.id}"]:checked`);
+      if (r) puestos[eq.id] = Number(r.value);
+    });
+    const faltan = C.equipos.filter(eq => !puestos[eq.id]).map(eq => eq.nombre);
+    if (faltan.length && !confirm(`${faltan.join(', ')} sin puesto: suma 0. ¿Guardar igual?`)) return;
+    const msg = $('#juegoMsg');
+    msg.textContent = 'Guardando…';
+    try {
+      const nombre = $('#juegoNombre').value.trim();
+      await F.tablero.guardarJuego(clave, { id: juegoEditando || F.uuid(), nombre, doble: $('#juegoDoble').checked, puestos });
+      msg.textContent = `Guardado: ${nombre}.`;
+      limpiarJuego();
+      await cargarTablero();
+    } catch (err) {
+      msg.textContent = 'No se pudo guardar: ' + err.message;
+    }
+  });
+
+  async function accionTablero(pregunta, fn) {
+    if (pregunta && !confirm(pregunta)) return;
+    try {
+      await fn();
+    } catch (e) {
+      alert('No se pudo: ' + e.message);
+    }
+    cargarTablero();
+  }
+
+  const mostrarVivo = si => accionTablero(null, () => F.tablero.mostrar(clave, si));
+  const borrarJuego = id => accionTablero('¿Borrar "' + (tab.juegos.find(j => j.id === id) || {}).nombre + '"?', () => F.tablero.borrarJuego(clave, id));
+  const borrarJugador = id => accionTablero('¿Borrar a ' + (tab.jugadores.find(j => j.id === id) || {}).nombre + '?', () => F.tablero.borrarJugador(clave, id));
+
+  $('#reiniciarTablero').addEventListener('click', () => {
+    if (!confirm('¿Borrar TODOS los juegos cargados y TODOS los anotados?')) return;
+    if (prompt('Escribí BORRAR para confirmar') !== 'BORRAR') return;
+    accionTablero(null, () => F.tablero.reiniciar(clave));
   });
 
   // ===== ARRANQUE ===========================================================

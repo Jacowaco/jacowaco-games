@@ -7,7 +7,7 @@ function setup() {
   const props = PropertiesService.getScriptProperties();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName('fotos') || ss.insertSheet('fotos');
-  if (hoja.getLastRow() === 0) hoja.appendRow(['id', 'equipo', 'consigna', 'archivo', 'estado', 'creada', 'revisada']);
+  if (hoja.getLastRow() === 0) hoja.appendRow(['id', 'equipo', 'consigna', 'archivo', 'estado', 'creada', 'revisada', 'autor']);
   props.setProperty('PLANILLA', ss.getId());
   if (!props.getProperty('CARPETA')) {
     const carpeta = DriveApp.createFolder("Jacowaco's Games · fotos");
@@ -58,7 +58,7 @@ function estado(admin) {
     inicio: inicio,
     consignas: admin || inicio ? JSON.parse(props.getProperty('CONSIGNAS') || '[]') : null,
     fotos: filas.map(f => {
-      const foto = { id: String(f[0]), equipo: String(f[1]), consigna: Number(f[2]), estado: String(f[4]), creada: Number(f[5]) };
+      const foto = { id: String(f[0]), equipo: String(f[1]), consigna: Number(f[2]), estado: String(f[4]), creada: Number(f[5]), autor: String(f[7] || '') };
       if (admin) foto.url = 'https://drive.google.com/thumbnail?id=' + f[3] + '&sz=w1600';
       return foto;
     }),
@@ -72,7 +72,8 @@ function subir(d) {
   const nombre = d.equipo + '-' + d.consigna + '-' + creada + '.jpg';
   const archivo = carpeta.createFile(Utilities.newBlob(Utilities.base64Decode(d.imagen), 'image/jpeg', nombre));
   const id = Utilities.getUuid();
-  conLock(() => hoja().appendRow([id, String(d.equipo), Number(d.consigna), archivo.getId(), 'pendiente', creada, '']));
+  const autor = String(d.autor || '').slice(0, 30);
+  conLock(() => hoja().appendRow([id, String(d.equipo), Number(d.consigna), archivo.getId(), 'pendiente', creada, '', autor]));
   return { id: id, creada: creada };
 }
 

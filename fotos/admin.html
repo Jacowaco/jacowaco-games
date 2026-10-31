@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css?v=8">
-  <link rel="stylesheet" href="fotos.css?v=1">
+  <link rel="stylesheet" href="../css/style.css?v=9">
+  <link rel="stylesheet" href="fotos.css?v=3">
 </head>
 <body class="paper">
 
@@ -36,6 +36,7 @@
     <button role="tab" data-tab="ranking">Ranking</button>
     <button role="tab" data-tab="grilla">Grilla</button>
     <button role="tab" data-tab="consignas">Consignas</button>
+    <button role="tab" data-tab="tablero">Tablero</button>
   </nav>
 
   <section class="fx-sec" data-panel="revisar" id="revisar"></section>
@@ -56,6 +57,26 @@
       <button class="fx-link" id="salir" type="button">Cerrar sesión</button>
     </div>
   </section>
+  <section class="fx-sec" data-panel="tablero" hidden>
+    <div id="vivoEstado"></div>
+    <form class="fx-juego" id="juegoForm">
+      <p class="label" id="juegoTitulo">Cargar juego</p>
+      <input class="fx-input" id="juegoNombre" maxlength="60" placeholder="Nombre del juego" required>
+      <div id="juegoPuestos"></div>
+      <label class="fx-check"><input type="checkbox" id="juegoDoble"> Vale doble (×2)</label>
+      <div class="fx-fila">
+        <button class="btn btn--pink">Guardar juego</button>
+        <button class="fx-link" type="button" id="juegoCancelar" hidden>Cancelar edición</button>
+      </div>
+      <p class="fx-nota" id="juegoMsg"></p>
+    </form>
+    <div id="tableroAdmin"></div>
+    <div class="fx-peligro">
+      <p class="label">Zona de peligro</p>
+      <p class="fx-nota">Borra todos los juegos cargados y todos los anotados. Usalo después de probar.</p>
+      <button class="btn btn--ghost" id="reiniciarTablero" type="button">Borrar tablero y anotados</button>
+    </div>
+  </section>
 </main>
 
 <div class="fx-modal" id="modal" hidden>
@@ -65,8 +86,8 @@
   </div>
 </div>
 
-<script src="config.js?v=1"></script>
-<script src="datos.js?v=1"></script>
-<script src="admin.js?v=1"></script>
+<script src="config.js?v=3"></script>
+<script src="datos.js?v=3"></script>
+<script src="admin.js?v=3"></script>
 </body>
 </html>

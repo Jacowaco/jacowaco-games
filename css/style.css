@@ -333,3 +333,10 @@ a{color:inherit}
 @media (prefers-reduced-motion: reduce) and (max-width:700px){
   .mapa__foto{transform:rotate(3.5deg)}
 }
+
+/* Botón flotante del tablero en vivo: aparece cuando se prende desde fotos/admin.html */
+.vivo-btn{position:fixed;z-index:60;right:var(--gutter);bottom:calc(14px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:10px;padding:12px 16px 11px;background:var(--ink);color:var(--white);border:2px solid var(--ink);border-radius:999px;text-decoration:none;font-family:var(--f-body);font-stretch:80%;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.02em;box-shadow:3px 3px 0 var(--pink)}
+.vivo-btn[hidden]{display:none}
+.vivo-btn span{width:10px;height:10px;border-radius:50%;background:#ff3b3b}
+@media (prefers-reduced-motion:no-preference){.vivo-btn span{animation:vivo-dot 1.2s ease-in-out infinite}}
+@keyframes vivo-dot{50%{opacity:.25}}

@@ -32,6 +32,7 @@
         equipo: f.equipo,
         consigna: Number(f.consigna),
         estado: f.estado,
+        autor: f.autor || '',
         creada: new Date(f.creada).getTime(),
         url: urlDe ? urlDe(f) : null,
       })),
@@ -63,7 +64,7 @@
     async admin(clave) {
       return normalizar(await this.rpc('admin', { p_clave: clave }), this.id, f => `${SB}/storage/v1/object/public/fotos/${f.ruta}`);
     },
-    async subir(equipo, consigna, blob, signal) {
+    async subir(equipo, consigna, autor, blob, signal) {
       const azar = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
       const ruta = `${equipo}/${consigna}-${azar}.jpg`;
       let r = await fetch(`${SB}/storage/v1/object/fotos/${ruta}`, {
@@ -72,7 +73,7 @@
       if (!r.ok) throw new Error(await errorDe(r));
       r = await fetch(`${SB}/rest/v1/fotos`, {
         method: 'POST', headers: this.headers({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
-        body: JSON.stringify({ equipo, consigna, ruta }), signal,
+        body: JSON.stringify({ equipo, consigna, ruta, autor }), signal,
       });
       if (!r.ok) throw new Error(await errorDe(r));
     },
@@ -101,9 +102,9 @@
     async admin(clave) {
       return normalizar(await this.llamar({ accion: 'admin', clave }), this.id, f => f.url);
     },
-    async subir(equipo, consigna, blob, signal) {
+    async subir(equipo, consigna, autor, blob, signal) {
       const imagen = await aBase64(blob);
-      await this.llamar({ accion: 'subir', equipo, consigna, imagen }, signal);
+      await this.llamar({ accion: 'subir', equipo, consigna, autor, imagen }, signal);
     },
     revisar(clave, id, estado) { return this.llamar({ accion: 'revisar', clave, id, estado }); },
     guardar(clave, consignas) { return this.llamar({ accion: 'guardar', clave, consignas }); },
@@ -137,11 +138,11 @@
   const admin = clave => leer(b => b.admin(clave));
 
   // Prueba los backends en orden; devuelve el nombre del que la recibió
-  async function subir(equipo, consigna, blob) {
+  async function subir(equipo, consigna, autor, blob) {
     let ultimo;
     for (const b of BACKENDS) {
       try {
-        await conTiempo(b.id === 'google' ? 45000 : 30000, s => b.subir(equipo, consigna, blob, s));
+        await conTiempo(b.id === 'google' ? 45000 : 30000, s => b.subir(equipo, consigna, autor, blob, s));
         return b.nombre;
       } catch (e) {
         ultimo = e;
@@ -156,6 +157,75 @@
     const malos = res.map((r, i) => r.status === 'rejected' ? `${BACKENDS[i].nombre} (${r.reason.message})` : null).filter(Boolean);
     if (malos.length === BACKENDS.length) throw new Error(malos.join(' · '));
     return malos;
+  }
+
+  // ===== JUGADOR ============================================================
+  // Quién es este celu. Lo comparten la página de fotos y el tablero (mismo sitio, mismo localStorage)
+  function guardado(clave) {
+    return {
+      get() { try { return localStorage.getItem(clave); } catch (e) { return null; } },
+      set(v) { try { v ? localStorage.setItem(clave, v) : localStorage.removeItem(clave); } catch (e) {} },
+    };
+  }
+  const yo = {
+    equipo: guardado('fotos-equipo'),
+    nombre: guardado('fotos-nombre'),
+    id: guardado('jugador-id'),
+    sync: guardado('jugador-sync'),
+  };
+
+  // Anota (o actualiza) al jugador en Supabase si cambió desde la última vez. Solo Supabase: si falla, reintenta en la próxima carga
+  async function registrarme() {
+    const equipo = yo.equipo.get(), nombre = yo.nombre.get();
+    if (!equipo || !nombre || !supabase.activo) return;
+    let id = yo.id.get();
+    if (!id) {
+      id = uuid();
+      yo.id.set(id);
+    }
+    const firma = equipo + '|' + nombre;
+    if (yo.sync.get() === firma) return;
+    try {
+      await supabase.rpc('registrar', { p_id: id, p_nombre: nombre, p_equipo: equipo });
+      yo.sync.set(firma);
+    } catch (e) { /* se reintenta la próxima vez */ }
+  }
+
+  // ===== TABLERO ============================================================
+  const PUNTOS = [4, 3, 2, 1];
+  const tablero = {
+    publico: () => supabase.rpc('tablero'),
+    admin: clave => supabase.rpc('tablero_admin', { p_clave: clave }),
+    guardarJuego: (clave, j) => supabase.rpc('guardar_juego', { p_clave: clave, p_id: j.id, p_nombre: j.nombre, p_doble: j.doble, p_puestos: j.puestos }),
+    borrarJuego: (clave, id) => supabase.rpc('borrar_juego', { p_clave: clave, p_id: id }),
+    borrarJugador: (clave, id) => supabase.rpc('borrar_jugador', { p_clave: clave, p_id: id }),
+    mostrar: (clave, si) => supabase.rpc('mostrar_vivo', { p_clave: clave, p_vivo: si }),
+    reiniciar: clave => supabase.rpc('reiniciar_tablero', { p_clave: clave }),
+  };
+
+  // Puntos de un equipo en un juego: 4-3-2-1 según el puesto (empates permitidos), x2 si el juego es doble
+  function puntos(juego, equipo) {
+    const p = Number((juego.puestos || {})[equipo]);
+    return p >= 1 && p <= PUNTOS.length ? PUNTOS[p - 1] * (juego.doble ? 2 : 1) : 0;
+  }
+
+  // Tabla general; con el mismo total comparten puesto
+  function posiciones(juegos) {
+    const filas = C.equipos.map(eq => ({ equipo: eq, total: juegos.reduce((s, j) => s + puntos(j, eq.id), 0) }))
+      .sort((a, b) => b.total - a.total);
+    filas.forEach((f, i) => { f.puesto = i && f.total === filas[i - 1].total ? filas[i - 1].puesto : i + 1; });
+    return filas;
+  }
+
+  // La usan el tablero en vivo y el panel
+  function htmlPosiciones(juegos, miEquipo) {
+    return `<ol class="fx-pos">${posiciones(juegos).map(p => `
+      <li class="${p.puesto === 1 && p.total > 0 ? 'is-punta' : ''} ${p.equipo.id === miEquipo ? 'is-yo' : ''}">
+        <span class="fx-pos__n">${p.puesto}</span>
+        <span class="cinta cinta--${p.equipo.id}"></span>
+        <span class="fx-pos__eq">${esc(p.equipo.nombre)}</span>
+        <span class="fx-pos__pts">${p.total}<small>pts</small></span>
+      </li>`).join('')}</ol>`;
   }
 
   // ===== FOTOS ==============================================================
@@ -219,6 +289,8 @@
   }
 
   // ===== UTILES =============================================================
+  const uuid = () => crypto.randomUUID ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16));
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const hora = ms => new Date(ms).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   function duracion(ms) {
@@ -230,5 +302,6 @@
 
   window.Fotos = {
     C, BACKENDS, porId, estado, admin, subir, aTodos, comprimir, ranking, estadoConsigna, esc, hora, duracion, nombreEquipo,
+    yo, registrarme, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
   };
 })();
