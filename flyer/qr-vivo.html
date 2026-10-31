@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>QR tablero · Jacowaco's Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=block" rel="stylesheet">
+<style>
+  /* Cartel 1080x1350 para mostrar en el celu o imprimir al llegar: QR al tablero en vivo (vivo/). Misma estética que el flyer. */
+  :root{
+    --paper:#F3F2EC; --white:#FFFEFA; --ink:#191816; --yellow:#FFD23C; --pink:#FF4D9D; --rosa:#FF7DB8; --tape:#E9DDB6;
+    --f-display:'Archivo',Impact,sans-serif; --f-type:'Courier Prime',monospace; --f-hand:'Permanent Marker',cursive;
+    --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .42 0 0 0 -.19'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1080px;height:1350px;overflow:hidden}
+  body{background:var(--grain),var(--rosa);color:var(--ink);font-family:var(--f-display);-webkit-font-smoothing:antialiased}
+  .cartel{position:relative;width:1080px;height:1350px;padding:84px 80px 0}
+  .tape{display:inline-block;background:var(--tape);font-family:var(--f-hand);font-size:44px;line-height:1;padding:.32em .8em .22em;transform:rotate(-3deg);
+    clip-path:polygon(0 6%,3% 0,7% 8%,11% 1%,100% 0,97% 12%,100% 24%,96% 38%,100% 52%,97% 66%,100% 80%,97% 92%,100% 100%,0 100%,3% 86%,0 72%,3% 58%,0 44%,3% 30%,0 18%)}
+  h1{margin-top:26px;font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:170px;line-height:1.02}
+  .qr{position:absolute;right:80px;top:470px;width:540px;padding:34px;background:var(--white);border:6px solid var(--ink);border-radius:10px;box-shadow:14px 14px 0 var(--ink);transform:rotate(2deg)}
+  .qr svg{display:block;width:100%;height:auto}
+  .pasos{position:absolute;left:80px;top:500px;width:360px;list-style:none;counter-reset:p}
+  .pasos li{counter-increment:p;font-family:var(--f-type);font-weight:700;font-size:34px;line-height:1.15;margin-bottom:30px}
+  .pasos li::before{content:counter(p);display:block;font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:96px;line-height:.85}
+  .url{position:absolute;left:80px;right:80px;bottom:200px;font-family:var(--f-type);font-weight:700;font-size:34px}
+  .cintas{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-rows:repeat(4,26px);gap:8px;padding-bottom:30px}
+  .cinta{--h:26px;height:var(--h);filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+  .cinta--ninja{background:linear-gradient(180deg,#2b2b2b 0 12%,#141414 12% 88%,#2b2b2b 88%)}
+  .cinta--gay{background:linear-gradient(180deg,#e40303 0 16.7%,#ff8c00 0 33.4%,#ffed00 0 50%,#008026 0 66.7%,#24408e 0 83.4%,#732982 0)}
+  .cinta--patrio{background:radial-gradient(circle closest-side at 50% 50%,#F6B40E 0 62%,transparent 68%),linear-gradient(180deg,#74ACDF 0 34%,#fff 0 66%,#74ACDF 0)}
+  .cinta--pinup{background:radial-gradient(circle at 50% 50%,#111 calc(var(--h)*.17),transparent calc(var(--h)*.17 + 1px)) 0 0/calc(var(--h)*.6) var(--h) repeat-x,#FFD400}
+</style>
+</head>
+<body>
+<div class="cartel">
+  <p class="tape">Jacowaco's Games</p>
+  <h1>Anotate<br>acá</h1>
+  <ol class="pasos">
+    <li>Escaneá el QR</li>
+    <li>Elegí la cinta que te tocó</li>
+    <li>Poné tu nombre y seguí el tablero</li>
+  </ol>
+  <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path fill="#FFFEFA" d="M0 0h33v33H0z"/><path stroke="#191816" d="M0 0.5h7m3 0h1m1 0h1m3 0h1m2 0h3m1 0h1m2 0h7M0 1.5h1m5 0h1m3 0h1m4 0h2m1 0h1m3 0h1m3 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m1 0h2m4 0h2m5 0h1m1 0h1m2 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h1m2 0h2m2 0h1m3 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h3m3 0h2m1 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m1 0h4m1 0h1m5 0h1m1 0h1m4 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h5m1 0h1m1 0h1m2 0h4m1 0h1M0 8.5h1m1 0h5m2 0h6m2 0h1m1 0h1m2 0h2m2 0h5M0 9.5h3m1 0h2m1 0h3m2 0h2m2 0h5m2 0h1m2 0h2m1 0h2m1 0h1M1 10.5h3m1 0h4m4 0h3m1 0h1m4 0h1m2 0h2m1 0h1m1 0h2M0 11.5h3m1 0h2m1 0h2m4 0h1m3 0h2m1 0h4m1 0h1m2 0h4M1 12.5h1m1 0h2m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m3 0h1m2 0h3m1 0h3M2 13.5h2m1 0h1m3 0h1m1 0h3m1 0h1m2 0h1m2 0h1m1 0h1m2 0h1m3 0h3M0 14.5h3m3 0h2m3 0h2m1 0h5m1 0h1m3 0h3m2 0h1m1 0h1M1 15.5h1m2 0h2m5 0h5m2 0h1m2 0h3m1 0h3m1 0h2M1 16.5h1m1 0h2m1 0h1m1 0h5m2 0h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h2m3 0h1M3 17.5h3m2 0h1m5 0h1m1 0h1m1 0h3m2 0h1m2 0h2m1 0h2m1 0h1M0 18.5h3m3 0h1m2 0h1m1 0h1m2 0h3m1 0h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h2M1 19.5h3m1 0h1m2 0h1m2 0h2m3 0h1m4 0h5m1 0h6M1 20.5h6m4 0h2m5 0h2m1 0h1m3 0h1m1 0h3m1 0h1M0 21.5h1m4 0h1m1 0h1m1 0h3m1 0h5m2 0h1m2 0h1m1 0h2m2 0h1m2 0h1M0 22.5h1m1 0h1m3 0h2m1 0h1m1 0h2m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m1 0h2m1 0h1M0 23.5h1m2 0h1m1 0h1m2 0h1m1 0h2m4 0h1m1 0h6m2 0h1m3 0h3M0 24.5h1m2 0h1m2 0h5m1 0h2m3 0h1m1 0h1m3 0h6m2 0h2M8 25.5h4m1 0h1m3 0h4m3 0h1m3 0h1m1 0h3M0 26.5h7m5 0h6m2 0h1m1 0h3m1 0h1m1 0h1m1 0h2M0 27.5h1m5 0h1m1 0h2m1 0h2m1 0h1m1 0h5m2 0h2m3 0h5M0 28.5h1m1 0h3m1 0h1m1 0h2m6 0h1m3 0h3m1 0h6m1 0h2M0 29.5h1m1 0h3m1 0h1m1 0h2m1 0h1m3 0h1m1 0h2m4 0h3m2 0h2m2 0h1M0 30.5h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2M0 31.5h1m5 0h1m4 0h1m3 0h1m5 0h1m6 0h3M0 32.5h7m1 0h5m1 0h2m1 0h1m4 0h1m1 0h4m3 0h1"/></svg>
+</div>
+  <p class="url">jacowaco.github.io/jacowaco-games/vivo</p>
+  <div class="cintas"><span class="cinta cinta--ninja"></span><span class="cinta cinta--gay"></span><span class="cinta cinta--patrio"></span><span class="cinta cinta--pinup"></span></div>
+</div>
+</body>
+</html>

@@ -209,3 +209,6 @@ button.fx-mini:disabled{cursor:default}
 .fx-modo button[aria-pressed="true"]{background:var(--grain),var(--pink)}
 .fx-modo .fx-badge{font-family:var(--f-type);font-size:13px;vertical-align:3px;background:var(--ink);color:var(--white)}
 .fx-salir{margin-top:32px;text-align:center}
+
+/* Vuelta al tablero desde la caza de fotos */
+.fx-volver{display:inline-block;margin-bottom:14px;padding:7px 12px 6px;background:var(--ink);color:var(--white);border-radius:999px;text-decoration:none;font:700 14px var(--f-type)}
