@@ -63,17 +63,25 @@ body{min-height:100svh;display:flex;flex-direction:column}
 .fx-card:nth-child(even){transform:rotate(.4deg)}
 .fx-card__n{font-family:var(--f-display);font-stretch:62%;font-weight:900;font-size:48px;line-height:.85;min-width:1.1ch}
 .fx-card__txt{font-family:var(--f-type);font-weight:700;font-size:17px;line-height:1.35;white-space:pre-line;align-self:center;padding-right:8px}
-.fx-card__mini{grid-column:1/-1;width:100%;max-height:200px;object-fit:cover;border:2px solid var(--ink);margin-top:6px}
 .fx-card__acc{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:8px}
 .fx-card__acc .btn{flex:1 1 100%}
 .fx-card.is-aprobada{background:var(--grain),#dff6e7}
-.fx-card.is-aprobada .fx-card__mini{opacity:.7}
 .fx-sello{position:absolute;right:10px;top:10px;font-family:var(--f-display);font-stretch:62%;font-weight:900;text-transform:uppercase;font-size:24px;line-height:1;padding:3px 8px 0;border:3px solid currentColor;transform:rotate(-8deg);pointer-events:none;background:rgba(255,254,250,.85)}
 .is-aprobada > .fx-sello{color:#138a4a}
 .is-pendiente > .fx-sello{color:#9a7400}
 .is-rechazada > .fx-sello{color:#c4005a}
 .fx-card .fx-sello{position:static;grid-column:1/-1;justify-self:start;margin-top:6px}
-.fx-card__quien{grid-column:1/-1}
+/* Fotos del propio equipo en cada consigna */
+.fx-galeria{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.fx-mini{position:relative;display:block;aspect-ratio:1;border:2px solid var(--ink);border-radius:3px;overflow:hidden;background:#ddd;text-decoration:none;color:var(--ink)}
+.fx-mini img{width:100%;height:100%;object-fit:cover}
+.fx-mini.is-aprobada{border-color:#138a4a;box-shadow:0 0 0 2px #138a4a}
+.fx-mini.is-rechazada img{opacity:.45;filter:grayscale(1)}
+.fx-mini__sin{display:grid;place-items:center;height:100%;padding:10px;text-align:center;font:700 13px var(--f-type)}
+.fx-mini__pie{position:absolute;left:0;right:0;bottom:0;display:grid;padding:4px 6px;background:rgba(255,254,250,.9);font:700 12px var(--f-type);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-mini__pie b{display:block}
+.fx-mini.is-aprobada .fx-mini__pie b{color:#138a4a}
+.fx-mini.is-rechazada .fx-mini__pie b{color:#c4005a}
 .fx-subiendo{font-family:var(--f-type);font-weight:700}
 @media (prefers-reduced-motion:no-preference){.fx-subiendo{animation:latir 1s ease-in-out infinite}}
 

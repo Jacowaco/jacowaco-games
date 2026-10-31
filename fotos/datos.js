@@ -175,21 +175,40 @@
     sync: guardado('jugador-sync'),
   };
 
-  // Anota (o actualiza) al jugador en Supabase si cambió desde la última vez. Solo Supabase: si falla, reintenta en la próxima carga
+  // Anota (o actualiza) al jugador en Supabase. Se llama en cada carga: si el panel lo borró, vuelve a quedar anotado.
+  // Durante la caza de fotos Supabase no deja cambiar de equipo: se vuelve al último equipo confirmado y se devuelve el motivo.
   async function registrarme() {
     const equipo = yo.equipo.get(), nombre = yo.nombre.get();
-    if (!equipo || !nombre || !supabase.activo) return;
+    if (!equipo || !nombre || !supabase.activo) return null;
     let id = yo.id.get();
     if (!id) {
       id = uuid();
       yo.id.set(id);
     }
-    const firma = equipo + '|' + nombre;
-    if (yo.sync.get() === firma) return;
     try {
       await supabase.rpc('registrar', { p_id: id, p_nombre: nombre, p_equipo: equipo });
-      yo.sync.set(firma);
-    } catch (e) { /* se reintenta la próxima vez */ }
+      yo.sync.set(equipo + '|' + nombre);
+    } catch (e) {
+      if (/cambiar de equipo/i.test(e.message)) {
+        const previo = (yo.sync.get() || '').split('|')[0];
+        if (previo) yo.equipo.set(previo);
+        return e.message;
+      }
+      /* sin señal: se reintenta la próxima vez */
+    }
+    return null;
+  }
+
+  // Links de las fotos del equipo de este jugador (Supabase lo decide por el registro, no por lo que diga el celu).
+  // Las que cayeron en el respaldo de Google no tienen link para los jugadores.
+  async function fotosEquipo() {
+    const id = yo.id.get();
+    if (!id || !supabase.activo) return {};
+    const urls = {};
+    for (const f of (await supabase.rpc('fotos_equipo', { p_jugador: id })) || []) {
+      urls[f.id] = `${SB}/storage/v1/object/public/fotos/${f.ruta}`;
+    }
+    return urls;
   }
 
   // ===== TABLERO ============================================================
@@ -303,6 +322,6 @@
 
   window.Fotos = {
     C, BACKENDS, porId, estado, admin, subir, aTodos, comprimir, ranking, estadoConsigna, esc, hora, duracion, nombreEquipo,
-    yo, registrarme, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
+    yo, registrarme, fotosEquipo, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
   };
 })();

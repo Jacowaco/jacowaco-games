@@ -43,7 +43,10 @@
     F.yo.nombre.set(nombre);
     editando = false;
     renderRegistro();
-    await F.registrarme();
+    if (await F.registrarme()) {
+      alert('No te podés cambiar de equipo durante la caza de fotos.');
+      renderRegistro();
+    }
     refrescar();
   });
 

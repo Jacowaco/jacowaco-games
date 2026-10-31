@@ -22,6 +22,7 @@
   const local = {};     // consigna → { fase: 'subiendo'|'error'|'enviada', file, msg }
   const miniaturas = {}; // consigna → objectURL de la última foto sacada en este celu
   let consignaActual = null;
+  let fotosMias = {};   // id de foto → link, solo las del propio equipo
 
   // ===== RENDER =============================================================
   function render() {
@@ -88,6 +89,7 @@
   }
 
   const SELLOS = { aprobada: '✓ Aprobada', pendiente: 'En revisión', rechazada: 'Rechazada' };
+  const ESTADO_CORTO = { aprobada: '✓', pendiente: 'En revisión', rechazada: '✗' };
 
   function tarjeta(n, txt) {
     let est = F.estadoConsigna(datos.fotos, equipo, n);
@@ -95,10 +97,20 @@
     if (local[n] && local[n].fase === 'enviada') {
       if (est === 'vacia' || est === 'rechazada') est = 'pendiente'; else delete local[n];
     }
-    const l = local[n] && local[n].fase !== 'enviada' ? local[n] : null;
-    const mini = miniaturas[n];
-    // Quién mandó la foto que define el estado (la última de ese estado)
-    const quien = datos.fotos.filter(f => f.equipo === equipo && f.consigna === n && f.estado === est).pop();
+    const l = local[n] && local[n].fase ? local[n] : null;
+    // Todas las fotos del equipo para esta consigna, la más nueva primero, para decidir si conviene mandar otra
+    const delEquipo = datos.fotos.filter(f => f.equipo === equipo && f.consigna === n).reverse();
+    const galeria = delEquipo.map((f, i) => {
+      // Si el link todavía no llegó, la más nueva usa la copia local (si la sacó este celu)
+      const url = fotosMias[f.id] || (i === 0 && f.autor === nombre ? miniaturas[n] : null);
+      return `<a class="fx-mini is-${f.estado}" ${url && fotosMias[f.id] ? `href="${esc(url)}" target="_blank" rel="noopener"` : ''}>
+        ${url ? `<img src="${esc(url)}" alt="" loading="lazy">` : '<span class="fx-mini__sin">Foto en el respaldo</span>'}
+        <span class="fx-mini__pie">${esc(f.autor || '¿?')} · ${F.hora(f.creada).slice(0, 5)}<b>${ESTADO_CORTO[f.estado] || ''}</b></span></a>`;
+    });
+    // Mientras sube (o si falló) se muestra la que está en el celu
+    if (l && l.fase !== 'enviada' && miniaturas[n]) {
+      galeria.unshift(`<span class="fx-mini is-local"><img src="${miniaturas[n]}" alt=""><span class="fx-mini__pie">${esc(nombre)}<b>${l.fase === 'error' ? 'Sin subir' : 'Subiendo'}</b></span></span>`);
+    }
     let accion = '';
     if (l && l.fase === 'subiendo') accion = `<p class="fx-subiendo">Subiendo…</p>`;
     else if (l && l.fase === 'error') accion = `<p class="fx-error">${esc(l.msg)}</p>
@@ -111,9 +123,8 @@
       <li class="fx-card is-${est}">
         <span class="fx-card__n">${n}</span>
         <p class="fx-card__txt">${esc(txt)}</p>
-        ${mini ? `<img class="fx-card__mini" src="${mini}" alt="">` : ''}
-        ${est !== 'vacia' && !(l && l.fase) ? `<span class="fx-sello">${SELLOS[est]}</span>` : ''}
-        ${quien && quien.autor && !l ? `<p class="fx-nota fx-card__quien">Foto de ${esc(quien.autor)} · ${F.hora(quien.creada).slice(0, 5)}</p>` : ''}
+        ${est !== 'vacia' && !(l && l.fase !== 'enviada') ? `<span class="fx-sello">${SELLOS[est]}</span>` : ''}
+        ${galeria.length ? `<div class="fx-galeria">${galeria.join('')}</div>` : ''}
         ${accion ? `<div class="fx-card__acc">${accion}</div>` : ''}
       </li>`;
   }
@@ -125,7 +136,12 @@
     if (pidiendo) { otraVez = true; return; }
     pidiendo = true;
     try {
-      datos = await F.estado();
+      // Si el registro no llegó a Supabase (sin señal al entrar), se reintenta: sin él no vienen las fotos del equipo
+      if (equipo && nombre && F.yo.sync.get() !== equipo + '|' + nombre) await F.registrarme();
+      const [d, mias] = await Promise.allSettled([F.estado(), F.fotosEquipo()]);
+      if (d.status === 'rejected') throw d.reason;
+      datos = d.value;
+      if (mias.status === 'fulfilled') fotosMias = mias.value;
       pie.textContent = 'Actualizado ' + F.hora(Date.now()) + (datos.errores.length ? ' · un servidor no responde, seguimos con el otro' : '');
       pie.classList.remove('is-mal');
     } catch (e) {
@@ -162,7 +178,7 @@
     if (t.dataset.equipo) {
       equipo = t.dataset.equipo;
       guardado.set(equipo);
-      F.registrarme();
+      anotarme();
       render();
       refrescar();
     } else if ('cambiar' in t.dataset) {
@@ -186,9 +202,22 @@
     if (!v) return;
     nombre = v;
     guardadoNombre.set(v);
-    F.registrarme();
+    anotarme();
     render();
   });
+
+  // Si Supabase no lo deja cambiar de equipo (juego largado), vuelve al suyo y avisa
+  async function anotarme() {
+    const motivo = await F.registrarme();
+    if (motivo) {
+      alert('No te podés cambiar de equipo durante la caza de fotos.');
+      equipo = guardado.get();
+      render();
+      refrescar();
+    } else if (equipo) {
+      refrescar();
+    }
+  }
 
   camara.addEventListener('change', () => {
     const file = camara.files[0];
@@ -199,8 +228,7 @@
   });
 
   render();
-  F.registrarme();
-  if (equipo) refrescar();
+  anotarme();
   setInterval(() => { if (equipo && !document.hidden) refrescar(); }, 8000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && equipo) refrescar(); });
 })();

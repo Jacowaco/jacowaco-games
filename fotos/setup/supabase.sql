@@ -139,10 +139,22 @@ alter table public.jugadores enable row level security;
 alter table public.juegos enable row level security;
 revoke all on public.jugadores, public.juegos from anon, authenticated;
 
+-- Durante la caza de fotos no se puede cambiar de equipo (si no, alguien se pasa a un rival para ver sus fotos)
 create or replace function public.registrar(p_id uuid, p_nombre text, p_equipo text) returns void
-language sql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
+begin
+  if largado() and exists (select 1 from jugadores where id = p_id and equipo <> p_equipo) then
+    raise exception 'no se puede cambiar de equipo durante la caza de fotos';
+  end if;
   insert into jugadores (id, nombre, equipo) values (p_id, left(trim(p_nombre), 30), p_equipo)
   on conflict (id) do update set nombre = excluded.nombre, equipo = excluded.equipo, editado = now();
+end $$;
+
+-- Las fotos (con ruta) del equipo en el que está anotado ese jugador: los compañeros se ven entre sí, los rivales no
+create or replace function public.fotos_equipo(p_jugador uuid) returns json
+language sql security definer set search_path = public stable as $$
+  select coalesce(json_agg(json_build_object('id', f.id, 'ruta', f.ruta) order by f.creada), '[]'::json)
+  from fotos f join jugadores p on p.id = p_jugador and p.equipo = f.equipo;
 $$;
 
 create or replace function public.vivo() returns boolean
@@ -212,7 +224,7 @@ begin
   delete from jugadores where true;
 end $$;
 
-grant execute on function public.registrar(uuid, text, text), public.vivo(), public.tablero(), public.tablero_admin(text),
+grant execute on function public.registrar(uuid, text, text), public.fotos_equipo(uuid), public.vivo(), public.tablero(), public.tablero_admin(text),
   public.guardar_juego(text, uuid, text, boolean, jsonb), public.borrar_juego(text, uuid), public.borrar_jugador(text, uuid),
   public.mostrar_vivo(text, boolean), public.reiniciar_tablero(text) to anon;
 
