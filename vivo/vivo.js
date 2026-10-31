@@ -67,14 +67,20 @@
       ${datos.fotos ? `<a class="btn fx-afotos" href="../fotos/">Caza de fotos →</a>` : ''}
       <h2 class="fx-h2">Posiciones</h2>
       ${F.htmlPosiciones(juegos, yo)}
-      <p class="fx-nota">Cada juego: 1º 4 pts · 2º 3 · 3º 2 · 4º 1. Los marcados ×2 valen doble.</p>
+      <p class="fx-nota">Puntos por juego: 1º&nbsp;=&nbsp;4 · 2º&nbsp;=&nbsp;3 · 3º&nbsp;=&nbsp;2 · 4º&nbsp;=&nbsp;1. Los marcados ×2 valen doble.</p>
 
       <h2 class="fx-h2">Juego por juego</h2>
       ${juegos.length ? `<div class="fx-detalle">
         <span></span>${C.equipos.map(e => `<span class="cinta cinta--${e.id}" title="${esc(e.nombre)}"></span>`).join('')}
         ${juegos.map((j, i) => `<span class="fx-detalle__j">${i + 1}. ${esc(j.nombre)}${j.doble ? ' <b class="fx-x2">×2</b>' : ''}</span>` +
-          C.equipos.map(e => `<span class="fx-detalle__p">${F.puntos(j, e.id) || '–'}</span>`).join('')).join('')}
-      </div>` : '<p class="fx-msg">Todavía no se jugó nada.</p>'}
+          C.equipos.map(e => {
+            const puesto = (j.puestos || {})[e.id];
+            return `<span class="fx-detalle__p">${puesto ? `<b>${puesto}º</b><small>+${F.puntos(j, e.id)}</small>` : '–'}</span>`;
+          }).join('')).join('')}
+        <span class="fx-detalle__j fx-detalle__total">Total</span>
+        ${C.equipos.map(e => `<span class="fx-detalle__p fx-detalle__total">${juegos.reduce((s, j) => s + F.puntos(j, e.id), 0)}<small>pts</small></span>`).join('')}
+      </div>
+      <p class="fx-nota">Grande: el puesto en ese juego. Chico: los puntos que sumó.</p>` : '<p class="fx-msg">Todavía no se jugó nada.</p>'}
 
       <h2 class="fx-h2">Equipos</h2>
       <div class="fx-roster">${C.equipos.map(e => {

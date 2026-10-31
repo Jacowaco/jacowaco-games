@@ -301,7 +301,7 @@
       ${tab.juegos.length ? `<ol class="fx-juegos">${tab.juegos.map(j => `
         <li><div><b>${esc(j.nombre)}</b>${j.doble ? ' <b class="fx-x2">×2</b>' : ''}
           <p class="fx-nota">${C.equipos.slice().sort((a, b) => (j.puestos[a.id] || 9) - (j.puestos[b.id] || 9))
-            .map(e => `${j.puestos[e.id] ? j.puestos[e.id] + 'º' : '–'} ${esc(e.nombre)} (${F.puntos(j, e.id)})`).join(' · ')}</p></div>
+            .map(e => `${j.puestos[e.id] ? j.puestos[e.id] + 'º' : '–'} ${esc(e.nombre)} (+${F.puntos(j, e.id)} pts)`).join(' · ')}</p></div>
           <div class="fx-fila"><button class="fx-link" data-editar-juego="${esc(j.id)}">Editar</button>
           <button class="fx-link" data-borrar-juego="${esc(j.id)}">Borrar</button></div></li>`).join('')}</ol>`
         : '<p class="fx-msg">Ninguno todavía.</p>'}
