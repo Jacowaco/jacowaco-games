@@ -220,7 +220,6 @@
     borrarJuego: (clave, id) => supabase.rpc('borrar_juego', { p_clave: clave, p_id: id }),
     borrarJugador: (clave, id) => supabase.rpc('borrar_jugador', { p_clave: clave, p_id: id }),
     mostrar: (clave, si) => supabase.rpc('mostrar_vivo', { p_clave: clave, p_vivo: si }),
-    reiniciar: clave => supabase.rpc('reiniciar_tablero', { p_clave: clave }),
   };
 
   // Puntos de un equipo en un juego: 4-3-2-1 según el puesto (empates permitidos), x2 si el juego es doble

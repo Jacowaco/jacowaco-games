@@ -142,6 +142,8 @@
       if (d.status === 'rejected') throw d.reason;
       datos = d.value;
       if (mias.status === 'fulfilled') fotosMias = mias.value;
+      // El equipo tiene fotos pero Supabase no devolvió ninguna: el panel borró a este jugador de los anotados, se vuelve a anotar
+      if (!Object.keys(fotosMias).length && datos.fotos.some(f => f.equipo === equipo && f.fuente === 'supabase')) F.registrarme();
       pie.textContent = 'Actualizado ' + F.hora(Date.now()) + (datos.errores.length ? ' · un servidor no responde, seguimos con el otro' : '');
       pie.classList.remove('is-mal');
     } catch (e) {

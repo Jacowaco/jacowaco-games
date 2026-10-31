@@ -379,11 +379,15 @@
   const borrarJuego = id => accionTablero('¿Borrar "' + (tab.juegos.find(j => j.id === id) || {}).nombre + '"?', () => F.tablero.borrarJuego(clave, id));
   const borrarJugador = id => accionTablero('¿Borrar a ' + (tab.jugadores.find(j => j.id === id) || {}).nombre + '?', () => F.tablero.borrarJugador(clave, id));
 
-  $('#reiniciarTablero').addEventListener('click', () => {
-    if (!confirm('¿Borrar TODOS los juegos cargados y TODOS los anotados?')) return;
+  // Por separado, para no llevarse los anotados al limpiar puntajes (ni al revés)
+  function borrarTodos(que, lista, borrar) {
+    if (!lista.length) return alert(`No hay ${que} para borrar.`);
+    if (!confirm(`¿Borrar ${lista.length === 1 ? 'el único' : 'los ' + lista.length} ${que}?`)) return;
     if (prompt('Escribí BORRAR para confirmar') !== 'BORRAR') return;
-    accionTablero(null, () => F.tablero.reiniciar(clave));
-  });
+    accionTablero(null, () => Promise.all(lista.map(x => borrar(clave, x.id))));
+  }
+  $('#borrarJuegos').addEventListener('click', () => borrarTodos('juegos cargados', tab.juegos, F.tablero.borrarJuego));
+  $('#borrarAnotados').addEventListener('click', () => borrarTodos('anotados', tab.jugadores, F.tablero.borrarJugador));
 
   // ===== PARTES DEL PANEL: tablero del cumple / caza de fotos ================
   const modoGuardado = {

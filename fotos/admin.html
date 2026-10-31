@@ -51,8 +51,10 @@
     <div id="tableroAdmin"></div>
     <div class="fx-peligro">
       <p class="label">Zona de peligro</p>
-      <p class="fx-nota">Borra todos los juegos cargados y todos los anotados. Usalo después de probar.</p>
-      <button class="btn btn--ghost" id="reiniciarTablero" type="button">Borrar tablero y anotados</button>
+      <p class="fx-nota">Borra todos los juegos cargados (los puntajes vuelven a cero). Los anotados quedan.</p>
+      <button class="btn btn--ghost" id="borrarJuegos" type="button">Borrar juegos cargados</button>
+      <p class="fx-nota">Borra la lista de anotados. Los juegos quedan. Cada celu se vuelve a anotar solo la próxima vez que abra la página.</p>
+      <button class="btn btn--ghost" id="borrarAnotados" type="button">Borrar anotados</button>
     </div>
   </div>
 
@@ -96,7 +98,7 @@
 </div>
 
 <script src="config.js?v=4"></script>
-<script src="datos.js?v=6"></script>
-<script src="admin.js?v=7"></script>
+<script src="datos.js?v=7"></script>
+<script src="admin.js?v=8"></script>
 </body>
 </html>
