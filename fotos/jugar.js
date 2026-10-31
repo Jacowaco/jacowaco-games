@@ -103,9 +103,9 @@
     const galeria = delEquipo.map((f, i) => {
       // Si el link todavía no llegó, la más nueva usa la copia local (si la sacó este celu)
       const url = fotosMias[f.id] || (i === 0 && f.autor === nombre ? miniaturas[n] : null);
-      return `<a class="fx-mini is-${f.estado}" ${url && fotosMias[f.id] ? `href="${esc(url)}" target="_blank" rel="noopener"` : ''}>
+      return `<button class="fx-mini is-${f.estado}" ${url ? `data-ver="${esc(url)}"` : 'disabled'} aria-label="Ver foto de ${esc(f.autor || '')}">
         ${url ? `<img src="${esc(url)}" alt="" loading="lazy">` : '<span class="fx-mini__sin">Foto en el respaldo</span>'}
-        <span class="fx-mini__pie">${esc(f.autor || '¿?')} · ${F.hora(f.creada).slice(0, 5)}<b>${ESTADO_CORTO[f.estado] || ''}</b></span></a>`;
+        <span class="fx-mini__pie">${esc(f.autor || '¿?')} · ${F.hora(f.creada).slice(0, 5)}<b>${ESTADO_CORTO[f.estado] || ''}</b></span></button>`;
     });
     // Mientras sube (o si falló) se muestra la que está en el celu
     if (l && l.fase !== 'enviada' && miniaturas[n]) {
@@ -175,7 +175,9 @@
   app.addEventListener('click', e => {
     const t = e.target.closest('button');
     if (!t) return;
-    if (t.dataset.equipo) {
+    if (t.dataset.ver) {
+      F.verFoto(t.dataset.ver);
+    } else if (t.dataset.equipo) {
       equipo = t.dataset.equipo;
       guardado.set(equipo);
       anotarme();

@@ -107,7 +107,7 @@
     const yaAprobada = datos.fotos.some(o => o !== f && o.equipo === f.equipo && o.consigna === f.consigna && o.estado === 'aprobada');
     return `
       <article class="fx-foto is-${f.estado}">
-        <a href="${esc(f.url)}" target="_blank" rel="noopener"><img src="${esc(f.url)}" alt="" loading="lazy"></a>
+        <button class="fx-foto__ver" data-ver="${esc(f.url)}" aria-label="Ver grande"><img src="${esc(f.url)}" alt="" loading="lazy"></button>
         <div class="fx-foto__info">
           ${conContexto ? `<p class="fx-foto__eq"><span class="cinta cinta--${esc(f.equipo)}"></span>${esc(F.nombreEquipo(f.equipo))}</p>
           <p class="fx-foto__c"><b>${f.consigna}.</b> ${esc(textoConsigna(f.consigna))}</p>` : ''}
@@ -198,7 +198,8 @@
   document.addEventListener('click', e => {
     const t = e.target.closest('button, [data-cerrar]');
     if (!t) return;
-    if (t.dataset.vivo) mostrarVivo(t.dataset.vivo === '1');
+    if (t.dataset.ver) F.verFoto(t.dataset.ver);
+    else if (t.dataset.vivo) mostrarVivo(t.dataset.vivo === '1');
     else if (t.dataset.editarJuego) editarJuego(t.dataset.editarJuego);
     else if (t.dataset.borrarJuego) borrarJuego(t.dataset.borrarJuego);
     else if (t.dataset.borrarJugador) borrarJugador(t.dataset.borrarJugador);

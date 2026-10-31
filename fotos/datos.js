@@ -308,6 +308,25 @@
     return 'vacia';
   }
 
+  // ===== VISOR ==============================================================
+  // Muestra una foto a pantalla completa sin salir de la página (abrirla en otra pestaña en el celu la descarga o te saca).
+  // Se cierra tocándola o con "atrás" del celu.
+  let visor = null;
+  function verFoto(url) {
+    if (!visor) {
+      visor = document.createElement('div');
+      visor.className = 'fx-visor';
+      visor.hidden = true;
+      visor.innerHTML = '<img alt=""><span>Tocá para cerrar</span>';
+      visor.addEventListener('click', () => history.back());
+      window.addEventListener('popstate', () => { visor.hidden = true; visor.querySelector('img').removeAttribute('src'); });
+      document.body.append(visor);
+    }
+    visor.querySelector('img').src = url;
+    visor.hidden = false;
+    history.pushState({ visor: true }, '');
+  }
+
   // ===== UTILES =============================================================
   const uuid = () => crypto.randomUUID ? crypto.randomUUID()
     : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16));
@@ -322,6 +341,6 @@
 
   window.Fotos = {
     C, BACKENDS, porId, estado, admin, subir, aTodos, comprimir, ranking, estadoConsigna, esc, hora, duracion, nombreEquipo,
-    yo, registrarme, fotosEquipo, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
+    yo, registrarme, fotosEquipo, verFoto, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
   };
 })();

@@ -192,3 +192,12 @@ textarea.fx-input{resize:vertical;font-size:15px;line-height:1.35}
 .fx-juegos li{display:grid;gap:6px;padding:12px;background:var(--white);border:2px solid var(--ink);border-radius:4px;font-family:var(--f-type)}
 .fx-anotado{display:inline-flex;align-items:center;gap:2px;margin-right:10px}
 .fx-anotado button{background:none;border:0;padding:2px 6px;cursor:pointer;font-size:13px;color:var(--muted)}
+
+/* Fotos que se tocan para verlas grandes (botones, no links: abrir otra pestaña en el celu la descarga) */
+button.fx-mini{width:100%;padding:0;font:inherit;cursor:zoom-in;text-align:left}
+button.fx-mini:disabled{cursor:default}
+.fx-foto__ver{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.fx-visor{position:fixed;inset:0;z-index:40;display:grid;place-items:center;gap:10px;align-content:center;padding:16px;background:rgba(25,24,22,.94);cursor:zoom-out}
+.fx-visor[hidden]{display:none}
+.fx-visor img{max-width:100%;max-height:calc(100svh - 70px);object-fit:contain;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.fx-visor span{font:700 13px var(--f-type);color:var(--paper)}
