@@ -15,6 +15,8 @@
   let datos = null;
   let firmaAnterior = '';
   let celdaAbierta = null; // { equipo, n } del modal de la grilla
+  // Fotos revisadas acá que el servidor todavía puede devolver con el estado viejo: id → { estado, listo (ms en que se guardó) }
+  const cambios = new Map();
 
   // ===== LOGIN ==============================================================
   async function entrar(c) {
@@ -54,7 +56,8 @@
     pidiendo = true;
     try {
       cargarTablero();
-      aplicar(await F.admin(clave));
+      const desde = Date.now();
+      aplicar(await F.admin(clave), desde);
     } catch (e) {
       $('#salud').innerHTML = `<span class="is-mal">Sin conexión: ${esc(e.message)}</span>`;
     } finally {
@@ -62,11 +65,16 @@
     }
   }
 
-  function aplicar(d) {
+  // desde: cuándo se pidió d. Una lectura que salió antes de que se guardara una revisión trae el estado viejo de esa foto
+  function aplicar(d, desde = 0) {
+    d.fotos.forEach(f => {
+      const c = cambios.get(f.id);
+      if (!c) return;
+      if (c.listo && desde > c.listo) cambios.delete(f.id);
+      else f.estado = c.estado;
+    });
     datos = d;
-    $('#salud').innerHTML = F.BACKENDS.map(b =>
-      `<span class="${d.salud[b.id] ? 'is-ok' : 'is-mal'}">● ${b.nombre}</span>`).join('') +
-      `<span>${F.hora(Date.now())}</span>`;
+    $('#salud').innerHTML = `<span class="is-ok">● Conectado</span><span>${F.hora(Date.now())}</span>`;
     // Solo se redibuja si cambió algo, así no saltan las imágenes ni el scroll
     const firma = JSON.stringify([d.inicio, d.consignas, d.fotos.map(f => f.id + f.estado)]);
     if (firma === firmaAnterior) return;
@@ -112,7 +120,7 @@
         <div class="fx-foto__info">
           ${conContexto ? `<p class="fx-foto__eq"><span class="cinta cinta--${esc(f.equipo)}"></span>${esc(F.nombreEquipo(f.equipo))}</p>
           <p class="fx-foto__c"><b>${f.consigna}.</b> ${esc(textoConsigna(f.consigna))}</p>` : ''}
-          <p class="fx-nota">Subida ${F.hora(f.creada)}${f.autor ? ' por <b>' + esc(f.autor) + '</b>' : ''} · ${f.fuente === 'google' ? 'Google' : 'Supabase'} · ${ESTADOS[f.estado] || esc(f.estado)}
+          <p class="fx-nota">Subida ${F.hora(f.creada)}${f.autor ? ' por <b>' + esc(f.autor) + '</b>' : ''} · ${ESTADOS[f.estado] || esc(f.estado)}
             ${yaAprobada ? ' · <b>ya tienen otra aprobada</b>' : ''}</p>
           <div class="fx-fila">
             ${f.estado !== 'aprobada' ? `<button class="btn fx-ok" data-revisar="aprobada" data-id="${esc(f.id)}">✓ Aprobar</button>` : ''}
@@ -172,13 +180,19 @@
     const f = datos.fotos.find(x => x.id === id);
     if (!f) return;
     const antes = f.estado;
+    const cambio = { estado, listo: 0 };
+    cambios.set(id, cambio);
     f.estado = estado;
     firmaAnterior = '';
     render();
     try {
-      await F.porId[f.fuente].revisar(clave, f.id, estado);
+      await F.supabase.revisar(clave, f.id, estado);
+      cambio.listo = Date.now();
     } catch (e) {
-      f.estado = antes;
+      if (cambios.get(id) === cambio) cambios.delete(id);
+      // Mientras se guardaba pudo llegar otra lectura: se corrige la foto que está en pantalla ahora
+      const actual = datos.fotos.find(x => x.id === id);
+      if (actual) actual.estado = antes;
       firmaAnterior = '';
       render();
       alert('No se pudo guardar: ' + e.message);
@@ -188,8 +202,7 @@
   async function largar(si) {
     if (!confirm(si ? '¿Largar el juego? Las consignas aparecen en todos los celus.' : '¿Volver a "esperando largada"? Se esconden las consignas y no pueden subir fotos.')) return;
     try {
-      const malos = await F.aTodos(b => b.largar(clave, si));
-      if (malos.length) alert('Ojo, no llegó a: ' + malos.join(', '));
+      await F.supabase.largar(clave, si);
     } catch (e) {
       alert('No se pudo: ' + e.message);
     }
@@ -219,18 +232,36 @@
   });
 
   // ===== CONSIGNAS ==========================================================
+  // Lo que se escribe queda en el celu hasta guardarlo: al minimizar, el navegador puede recargar la página
+  const borrador = {
+    get() { try { return JSON.parse(localStorage.getItem('fotos-borrador')); } catch (e) { return null; } },
+    set(v) { try { v ? localStorage.setItem('fotos-borrador', JSON.stringify(v)) : localStorage.removeItem('fotos-borrador'); } catch (e) {} },
+  };
+  const textosEditor = () => [...$('#editor').querySelectorAll('textarea')].map(t => t.value);
+  const guardarBorrador = () => borrador.set(textosEditor());
+
   function filaEditor(txt) {
     const li = document.createElement('li');
     li.innerHTML = `<textarea class="fx-input" rows="2"></textarea><button class="fx-link" type="button" aria-label="Borrar">✕</button>`;
     li.querySelector('textarea').value = txt;
-    li.querySelector('button').addEventListener('click', () => li.remove());
+    li.querySelector('button').addEventListener('click', () => { li.remove(); guardarBorrador(); });
     return li;
   }
 
   function cargarEditor() {
-    const lista = (datos.consignas && datos.consignas.length) ? datos.consignas : Array(10).fill('');
+    const guardadas = datos.consignas || [];
+    let b = borrador.get();
+    // Un borrador igual a lo guardado no hace falta
+    if (!Array.isArray(b) || JSON.stringify(b.map(t => t.trim()).filter(Boolean)) === JSON.stringify(guardadas)) {
+      borrador.set(null);
+      b = null;
+    }
+    const lista = b || (guardadas.length ? guardadas : Array(10).fill(''));
     $('#editor').replaceChildren(...lista.map(filaEditor));
+    if (b) $('#guardarMsg').textContent = 'Recuperé lo que estabas escribiendo. Todavía no está guardado.';
   }
+
+  $('#editor').addEventListener('input', guardarBorrador);
 
   $('#agregar').addEventListener('click', () => {
     const li = filaEditor('');
@@ -239,15 +270,20 @@
   });
 
   $('#guardar').addEventListener('click', async () => {
-    const consignas = [...$('#editor').querySelectorAll('textarea')].map(t => t.value.trim()).filter(Boolean);
+    const consignas = textosEditor().map(t => t.trim()).filter(Boolean);
     const msg = $('#guardarMsg');
     if (datos.inicio && consignas.length !== total() && !confirm('El juego ya largó y cambia la cantidad de consignas. ¿Guardar igual?')) return;
     msg.textContent = 'Guardando…';
     try {
-      const malos = await F.aTodos(b => b.guardar(clave, consignas));
-      msg.textContent = `Guardadas ${consignas.length} consignas` + (malos.length ? '. Ojo, no llegó a: ' + malos.join(', ') : '.');
-      await refrescar();
+      await F.supabase.guardar(clave, consignas);
+      // Sin esperar a refrescar: si había una lectura en curso, traería las consignas de antes y el editor volvería atrás
+      borrador.set(null);
+      datos.consignas = consignas;
+      firmaAnterior = '';
+      render();
       cargarEditor();
+      msg.textContent = `Guardadas ${consignas.length} consignas.`;
+      refrescar();
     } catch (e) {
       msg.textContent = 'No se pudo guardar: ' + e.message;
     }
@@ -257,8 +293,7 @@
     if (!confirm('¿Borrar TODAS las fotos y volver a "esperando largada"?')) return;
     if (prompt('Escribí BORRAR para confirmar') !== 'BORRAR') return;
     try {
-      const malos = await F.aTodos(b => b.reiniciar(clave));
-      if (malos.length) alert('Ojo, no llegó a: ' + malos.join(', '));
+      await F.supabase.reiniciar(clave);
     } catch (e) {
       alert('No se pudo: ' + e.message);
     }

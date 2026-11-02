@@ -1,4 +1,4 @@
-/* Caza de fotos: los dos backends (Supabase y Google), compresión y ranking. Lo usan jugar.js y admin.js */
+/* Caza de fotos: backend en Supabase, compresión y ranking. Lo usan jugar.js y admin.js */
 (function () {
   'use strict';
 
@@ -20,14 +20,13 @@
     return fn(ac.signal).finally(() => clearTimeout(t));
   }
 
-  // Los dos backends devuelven lo mismo; acá se pasa a { inicio: ms|null, consignas: []|null, fotos: [...] }
-  function normalizar(d, fuente, urlDe) {
-    if (!d) throw new Error('el backend no tiene el juego configurado');
+  // Lo que devuelve Supabase pasado a { inicio: ms|null, consignas: []|null, fotos: [...] }
+  function normalizar(d, urlDe) {
+    if (!d) throw new Error('Supabase no tiene el juego configurado');
     return {
       inicio: d.inicio ? new Date(d.inicio).getTime() : null,
       consignas: d.consignas || null,
       fotos: (d.fotos || []).map(f => ({
-        fuente,
         id: String(f.id),
         equipo: f.equipo,
         consigna: Number(f.consigna),
@@ -35,7 +34,7 @@
         autor: f.autor || '',
         creada: new Date(f.creada).getTime(),
         url: urlDe ? urlDe(f) : null,
-      })),
+      })).sort((a, b) => a.creada - b.creada),
     };
   }
 
@@ -60,10 +59,10 @@
       return txt ? JSON.parse(txt) : null;
     },
     async estado(signal) {
-      return normalizar(await this.rpc('estado', {}, signal), this.id);
+      return normalizar(await this.rpc('estado', {}, signal));
     },
-    async admin(clave) {
-      return normalizar(await this.rpc('admin', { p_clave: clave }), this.id, f => `${SB}/storage/v1/object/public/fotos/${f.ruta}`);
+    async admin(clave, signal) {
+      return normalizar(await this.rpc('admin', { p_clave: clave }, signal), f => `${SB}/storage/v1/object/public/fotos/${f.ruta}`);
     },
     async subir(equipo, consigna, autor, blob, signal) {
       const azar = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -84,81 +83,9 @@
     reiniciar(clave) { return this.rpc('reiniciar', { p_clave: clave }); },
   };
 
-  // ===== GOOGLE (Apps Script) ===============================================
-  // POST con body de texto plano: así el navegador no hace preflight y Apps Script responde con CORS abierto
-  const google = {
-    id: 'google',
-    nombre: 'Google',
-    activo: !!C.google.url,
-    async llamar(datos, signal) {
-      const r = await fetch(C.google.url, datos ? { method: 'POST', body: JSON.stringify(datos), signal } : { signal });
-      if (!r.ok) throw new Error('error ' + r.status);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error);
-      return d;
-    },
-    async estado(signal) {
-      return normalizar(await this.llamar(null, signal), this.id);
-    },
-    async admin(clave) {
-      return normalizar(await this.llamar({ accion: 'admin', clave }), this.id, f => f.url);
-    },
-    async subir(equipo, consigna, autor, blob, signal) {
-      const imagen = await aBase64(blob);
-      await this.llamar({ accion: 'subir', equipo, consigna, autor, imagen }, signal);
-    },
-    revisar(clave, id, estado) { return this.llamar({ accion: 'revisar', clave, id, estado }); },
-    guardar(clave, consignas) { return this.llamar({ accion: 'guardar', clave, consignas }); },
-    largar(clave, si) { return this.llamar({ accion: 'largar', clave, largar: si }); },
-    reiniciar(clave) { return this.llamar({ accion: 'reiniciar', clave }); },
-  };
-
-  // El primario va primero: de ahí salen la largada y las consignas, y ahí se intenta subir antes
-  const BACKENDS = [supabase, google].filter(b => b.activo).sort((a, b) => (b.id === C.primario) - (a.id === C.primario));
-  const porId = { supabase, google };
-
-  // Lee todos los backends y junta las fotos. salud = { supabase: true|false, google: ... }
-  async function leer(fn) {
-    if (!BACKENDS.length) throw new Error('No hay backends configurados en fotos/config.js');
-    const res = await Promise.allSettled(BACKENDS.map(fn));
-    const ok = res.map((r, i) => r.status === 'fulfilled' ? r.value : null);
-    const salud = {};
-    BACKENDS.forEach((b, i) => { salud[b.id] = !!ok[i]; });
-    const base = ok.find(Boolean);
-    if (!base) throw res[0].reason;
-    return {
-      inicio: base.inicio,
-      consignas: base.consignas,
-      fotos: ok.filter(Boolean).flatMap(d => d.fotos).sort((a, b) => a.creada - b.creada),
-      salud,
-      errores: res.filter(r => r.status === 'rejected').map(r => r.reason && r.reason.message),
-    };
-  }
-
-  const estado = () => leer(b => conTiempo(15000, s => b.estado(s)));
-  const admin = clave => leer(b => b.admin(clave));
-
-  // Prueba los backends en orden; devuelve el nombre del que la recibió
-  async function subir(equipo, consigna, autor, blob) {
-    let ultimo;
-    for (const b of BACKENDS) {
-      try {
-        await conTiempo(b.id === 'google' ? 45000 : 30000, s => b.subir(equipo, consigna, autor, blob, s));
-        return b.nombre;
-      } catch (e) {
-        ultimo = e;
-      }
-    }
-    throw ultimo || new Error('No hay backends configurados');
-  }
-
-  // Cambios del panel que van a todos los backends; devuelve los nombres de los que fallaron
-  async function aTodos(fn) {
-    const res = await Promise.allSettled(BACKENDS.map(fn));
-    const malos = res.map((r, i) => r.status === 'rejected' ? `${BACKENDS[i].nombre} (${r.reason.message})` : null).filter(Boolean);
-    if (malos.length === BACKENDS.length) throw new Error(malos.join(' · '));
-    return malos;
-  }
+  const estado = () => conTiempo(15000, s => supabase.estado(s));
+  const admin = clave => conTiempo(15000, s => supabase.admin(clave, s));
+  const subir = (equipo, consigna, autor, blob) => conTiempo(30000, s => supabase.subir(equipo, consigna, autor, blob, s));
 
   // ===== JUGADOR ============================================================
   // Quién es este celu. Lo comparten la página de fotos y el tablero (mismo sitio, mismo localStorage)
@@ -199,8 +126,7 @@
     return null;
   }
 
-  // Links de las fotos del equipo de este jugador (Supabase lo decide por el registro, no por lo que diga el celu).
-  // Las que cayeron en el respaldo de Google no tienen link para los jugadores.
+  // Links de las fotos del equipo de este jugador (Supabase lo decide por el registro, no por lo que diga el celu)
   async function fotosEquipo() {
     const id = yo.id.get();
     if (!id || !supabase.activo) return {};
@@ -267,15 +193,6 @@
     }
   }
 
-  function aBase64(blob) {
-    return new Promise((ok, mal) => {
-      const fr = new FileReader();
-      fr.onload = () => ok(String(fr.result).split(',')[1]);
-      fr.onerror = () => mal(fr.error);
-      fr.readAsDataURL(blob);
-    });
-  }
-
   // ===== RANKING ============================================================
   // Una consigna está hecha cuando tiene una foto aprobada; cuenta la hora de SUBIDA de la primera aprobada.
   // Gana el equipo que completa todas y cuya última consigna hecha se subió antes.
@@ -339,7 +256,7 @@
   const nombreEquipo = id => (C.equipos.find(e => e.id === id) || { nombre: id }).nombre;
 
   window.Fotos = {
-    C, BACKENDS, porId, estado, admin, subir, aTodos, comprimir, ranking, estadoConsigna, esc, hora, duracion, nombreEquipo,
+    C, supabase, estado, admin, subir, comprimir, ranking, estadoConsigna, esc, hora, duracion, nombreEquipo,
     yo, registrarme, fotosEquipo, verFoto, tablero, PUNTOS, puntos, posiciones, htmlPosiciones, uuid,
   };
 })();

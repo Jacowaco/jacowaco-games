@@ -18,7 +18,7 @@
   let equipo = C.equipos.some(e => e.id === guardado.get()) ? guardado.get() : null;
   let nombre = guardadoNombre.get();
 
-  let datos = null;     // último estado de los backends
+  let datos = null;     // último estado de Supabase
   const local = {};     // consigna → { fase: 'subiendo'|'error'|'enviada', file, msg }
   const miniaturas = {}; // consigna → objectURL de la última foto sacada en este celu
   let consignaActual = null;
@@ -104,7 +104,7 @@
       // Si el link todavía no llegó, la más nueva usa la copia local (si la sacó este celu)
       const url = fotosMias[f.id] || (i === 0 && f.autor === nombre ? miniaturas[n] : null);
       return `<button class="fx-mini is-${f.estado}" ${url ? `data-ver="${esc(url)}"` : 'disabled'} aria-label="Ver foto de ${esc(f.autor || '')}">
-        ${url ? `<img src="${esc(url)}" alt="" loading="lazy">` : '<span class="fx-mini__sin">Foto en el respaldo</span>'}
+        ${url ? `<img src="${esc(url)}" alt="" loading="lazy">` : '<span class="fx-mini__sin">Cargando foto</span>'}
         <span class="fx-mini__pie">${esc(f.autor || '¿?')} · ${F.hora(f.creada).slice(0, 5)}<b>${ESTADO_CORTO[f.estado] || ''}</b></span></button>`;
     });
     // Mientras sube (o si falló) se muestra la que está en el celu
@@ -143,8 +143,8 @@
       datos = d.value;
       if (mias.status === 'fulfilled') fotosMias = mias.value;
       // El equipo tiene fotos pero Supabase no devolvió ninguna: el panel borró a este jugador de los anotados, se vuelve a anotar
-      if (!Object.keys(fotosMias).length && datos.fotos.some(f => f.equipo === equipo && f.fuente === 'supabase')) F.registrarme();
-      pie.textContent = 'Actualizado ' + F.hora(Date.now()) + (datos.errores.length ? ' · un servidor no responde, seguimos con el otro' : '');
+      if (!Object.keys(fotosMias).length && datos.fotos.some(f => f.equipo === equipo)) F.registrarme();
+      pie.textContent = 'Actualizado ' + F.hora(Date.now());
       pie.classList.remove('is-mal');
     } catch (e) {
       pie.textContent = 'Sin conexión, reintentando… (' + e.message + ')';
