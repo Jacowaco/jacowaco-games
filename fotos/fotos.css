@@ -122,21 +122,24 @@ textarea.fx-input{resize:vertical;font-size:15px;line-height:1.35}
 .fx-rank .cinta{--h:22px}
 .fx-rank .fx-sello{color:#c4005a;font-size:22px;top:auto;bottom:-12px;right:8px}
 
-.fx-grilla{display:grid;grid-template-columns:auto repeat(var(--n),minmax(26px,1fr));gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
-.fx-grilla__h{font:700 12px var(--f-type);text-align:center}
-.fx-grilla__eq{display:grid;grid-template-columns:28px auto;align-items:center;gap:6px;font:700 13px var(--f-type);padding-right:6px;white-space:nowrap}
+.fx-grilla{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--e),minmax(48px,64px));gap:6px;align-items:center;margin-bottom:10px}
+/* Los nombres de los equipos quedan pegados debajo de las pestañas mientras se baja */
+.fx-grilla__h{position:sticky;top:42px;z-index:1;align-self:stretch;background:var(--paper);box-shadow:-6px 0 0 var(--paper);padding:6px 0}
+.fx-grilla__eq{display:grid;justify-items:center;align-content:end;gap:4px;font:700 12px var(--f-type)}
 .fx-grilla__eq .cinta{--h:12px}
-.fx-celda{aspect-ratio:1;border:2px solid var(--ink);border-radius:3px;background:var(--white);font:700 12px var(--f-type);cursor:pointer;padding:0}
+.fx-grilla__c{font:13px/1.25 var(--f-type);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fx-celda{position:relative;height:46px;border:2px solid var(--ink);border-radius:4px;background:var(--white);font:700 17px var(--f-type);color:var(--ink);cursor:pointer;padding:0}
+.fx-celda small{position:absolute;top:1px;right:3px;font-size:10px}
 .fx-celda:disabled{cursor:default;opacity:.5}
 .fx-celda.is-aprobada{background:var(--ok)}
 .fx-celda.is-pendiente{background:var(--pend)}
 .fx-celda.is-rechazada{background:var(--mal)}
 
-.fx-editor{display:grid;gap:10px;margin:16px 0;padding-left:28px;font:700 18px var(--f-type)}
-.fx-editor li{padding-left:4px}
-.fx-editor li > *{vertical-align:top}
-.fx-editor textarea{width:calc(100% - 34px)}
-.fx-editor .fx-link{width:28px;text-decoration:none;font-size:18px}
+.fx-consignas{margin:16px 0 6px;min-height:40svh}
+#guardar{margin:10px 0 6px}
+/* Revisar de a una: al aprobar, la siguiente queda arriba, debajo de las pestañas */
+#revisar{scroll-margin-top:50px}
+.fx-cola{margin-bottom:10px}
 .fx-peligro{margin-top:40px;padding-top:18px;border-top:2px dashed var(--ink);display:grid;gap:10px;justify-items:start}
 
 .fx-modal{position:fixed;inset:0;z-index:20;background:rgba(25,24,22,.7);overflow-y:auto;padding:16px}

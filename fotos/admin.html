@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css?v=9">
-  <link rel="stylesheet" href="fotos.css?v=9">
+  <link rel="stylesheet" href="fotos.css?v=11">
 </head>
 <body class="paper">
 
@@ -72,12 +72,10 @@
     <section class="fx-sec" data-panel="ranking" id="ranking" hidden></section>
     <section class="fx-sec" data-panel="grilla" id="grilla" hidden></section>
     <section class="fx-sec" data-panel="consignas" hidden>
-      <p class="sub">Una por casillero. El número de cada consigna es su posición: una vez largado el juego no las reordenes ni borres del medio, porque las fotos quedan atadas al número.</p>
-      <ol class="fx-editor" id="editor"></ol>
-      <div class="fx-fila">
-        <button class="btn btn--ghost" id="agregar" type="button">+ Agregar</button>
-        <button class="btn btn--pink" id="guardar" type="button">Guardar</button>
-      </div>
+      <p class="sub">Una por línea: podés pegarlas todas de una. El número de cada consigna es su línea: una vez largado el juego no las reordenes ni borres del medio, porque las fotos quedan atadas al número.</p>
+      <textarea class="fx-input fx-consignas" id="editor" rows="14" placeholder="Algo verde&#10;Un perro con ropa&#10;…"></textarea>
+      <p class="fx-nota" id="cuenta"></p>
+      <button class="btn btn--pink" id="guardar" type="button">Guardar</button>
       <p class="fx-nota" id="guardarMsg"></p>
       <div class="fx-peligro">
         <p class="label">Zona de peligro</p>
@@ -85,6 +83,13 @@
         <button class="btn btn--ghost" id="reiniciar" type="button">Borrar todas las fotos</button>
       </div>
     </section>
+  </div>
+
+  <div class="fx-peligro">
+    <p class="label">Fin del cumple</p>
+    <p class="fx-nota">Baja en un .zip todas las fotos (por equipo), la tabla, los juegos, los anotados y las consignas. Pesa unos 60 MB: mejor desde la compu.</p>
+    <button class="btn" id="bajarTodo" type="button">Bajar todo</button>
+    <p class="fx-nota" id="bajarMsg"></p>
   </div>
 
   <p class="fx-salir"><button class="fx-link" id="salir" type="button">Cerrar sesión</button></p>
@@ -99,6 +104,6 @@
 
 <script src="config.js?v=5"></script>
 <script src="datos.js?v=9"></script>
-<script src="admin.js?v=11"></script>
+<script src="admin.js?v=13"></script>
 </body>
 </html>

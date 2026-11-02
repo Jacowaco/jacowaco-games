@@ -17,6 +17,8 @@
   let celdaAbierta = null; // { equipo, n } del modal de la grilla
   // Fotos revisadas acá que el servidor todavía puede devolver con el estado viejo: id → { estado, listo (ms en que se guardó) }
   const cambios = new Map();
+  let conocidas = null; // ids de las fotos que ya llegaron; null hasta la primera lectura, para no avisar por las viejas
+  const saltadas = [];  // pendientes que se mandaron al final con "Saltar", en ese orden
 
   // ===== LOGIN ==============================================================
   async function entrar(c) {
@@ -74,6 +76,8 @@
       else f.estado = c.estado;
     });
     datos = d;
+    if (conocidas && d.fotos.some(f => f.estado === 'pendiente' && !conocidas.has(f.id))) avisar();
+    conocidas = new Set(d.fotos.map(f => f.id));
     $('#salud').innerHTML = `<span class="is-ok">● Conectado</span><span>${F.hora(Date.now())}</span>`;
     // Solo se redibuja si cambió algo, así no saltan las imágenes ni el scroll
     const firma = JSON.stringify([d.inicio, d.consignas, d.fotos.map(f => f.id + f.estado)]);
@@ -103,13 +107,61 @@
          ${total() ? '' : '<p class="fx-nota">Primero cargá las consignas.</p>'}`;
   }
 
+  // De la más vieja a la más nueva; las saltadas van al final
+  function pendientes() {
+    const orden = f => saltadas.indexOf(f.id);
+    return datos.fotos.filter(f => f.estado === 'pendiente').sort((a, b) => orden(a) - orden(b));
+  }
+
+  // De a una: al aprobar o rechazar aparece la siguiente
   function renderRevisar() {
-    const pend = datos.fotos.filter(f => f.estado === 'pendiente');
+    const pend = pendientes();
     $('#badge').textContent = pend.length || '';
     $('#badgeModo').textContent = pend.length || '';
-    $('#revisar').innerHTML = pend.length
-      ? pend.map(f => fotoCard(f, true)).join('')
-      : `<p class="fx-msg">No hay fotos para revisar.</p>`;
+    if (!pend.length) {
+      $('#revisar').innerHTML = `<p class="fx-msg">No hay fotos para revisar.</p>`;
+      return;
+    }
+    $('#revisar').innerHTML = `<p class="fx-nota fx-cola">${pend.length === 1 ? 'Es la última' : `Quedan ${pend.length}`}</p>` + fotoCard(pend[0], true);
+    // Las que siguen se van bajando, así aparecen al instante
+    pend.slice(1, 3).forEach(f => { new Image().src = f.url; });
+  }
+
+  function irARevisar() {
+    // 50: lo que tapan las pestañas pegadas arriba
+    if ($('#revisar').getBoundingClientRect().top < 50) $('#revisar').scrollIntoView();
+  }
+
+  function saltar(id) {
+    const i = saltadas.indexOf(id);
+    if (i >= 0) saltadas.splice(i, 1);
+    saltadas.push(id);
+    renderRevisar();
+    irARevisar();
+  }
+
+  // Sonido y vibración cuando llega una foto. El navegador solo deja sonar después de tocar algo en la página.
+  let audio = null;
+  document.addEventListener('pointerdown', () => {
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+    } catch (e) {}
+  });
+  function avisar() {
+    try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {}
+    if (!audio || audio.state !== 'running') return;
+    const t = audio.currentTime;
+    [880, 1320].forEach((hz, i) => {
+      const o = audio.createOscillator(), g = audio.createGain(), t0 = t + i * 0.15;
+      o.frequency.value = hz;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+      o.connect(g).connect(audio.destination);
+      o.start(t0);
+      o.stop(t0 + 0.15);
+    });
   }
 
   function fotoCard(f, conContexto) {
@@ -126,6 +178,7 @@
             ${f.estado !== 'aprobada' ? `<button class="btn fx-ok" data-revisar="aprobada" data-id="${esc(f.id)}">✓ Aprobar</button>` : ''}
             ${f.estado !== 'rechazada' ? `<button class="btn btn--ghost" data-revisar="rechazada" data-id="${esc(f.id)}">✗ Rechazar</button>` : ''}
             ${f.estado !== 'pendiente' && !conContexto ? `<button class="fx-link" data-revisar="pendiente" data-id="${esc(f.id)}">Volver a pendiente</button>` : ''}
+            ${conContexto && pendientes().length > 1 ? `<button class="fx-link" data-saltar="${esc(f.id)}">Saltar</button>` : ''}
           </div>
         </div>
       </article>`;
@@ -149,19 +202,20 @@
       <p class="fx-nota">Gana el que completa todas y cuya última foto aprobada se subió antes. Cuenta la hora de subida, no la de tu aprobación.</p>`;
   }
 
+  // Una fila por consigna y una columna por equipo: entra a lo ancho del celu sin scroll lateral
   function renderGrilla() {
     const n = total();
     const nums = Array.from({ length: n }, (_, i) => i + 1);
-    $('#grilla').innerHTML = n ? `<div class="fx-grilla" style="--n:${n}">
-      <span></span>${nums.map(i => `<span class="fx-grilla__h">${i}</span>`).join('')}
-      ${C.equipos.map(eq => `<span class="fx-grilla__eq"><span class="cinta cinta--${eq.id}"></span>${esc(eq.nombre)}</span>` +
-        nums.map(i => {
+    $('#grilla').innerHTML = n ? `<div class="fx-grilla" style="--e:${C.equipos.length}">
+      <span class="fx-grilla__h"></span>${C.equipos.map(eq => `<span class="fx-grilla__h fx-grilla__eq"><span class="cinta cinta--${eq.id}"></span>${esc(eq.nombre)}</span>`).join('')}
+      ${nums.map(i => `<span class="fx-grilla__c"><b>${i}.</b> ${esc(textoConsigna(i))}</span>` +
+        C.equipos.map(eq => {
           const est = F.estadoConsigna(datos.fotos, eq.id, i);
           const cant = datos.fotos.filter(f => f.equipo === eq.id && f.consigna === i).length;
-          return `<button class="fx-celda is-${est}" data-celda="${eq.id}:${i}" ${cant ? '' : 'disabled'} title="${esc(eq.nombre)} · ${i}">${cant > 1 ? cant : ''}</button>`;
+          return `<button class="fx-celda is-${est}" data-celda="${eq.id}:${i}" ${cant ? '' : 'disabled'} aria-label="${esc(eq.nombre)} · consigna ${i}">${i}${cant > 1 ? `<small>×${cant}</small>` : ''}</button>`;
         }).join('')).join('')}
     </div>
-    <p class="fx-nota">Verde: aprobada · amarillo: pendiente · rosa: rechazada. El número es cuántas fotos mandaron. Tocá una celda para ver las fotos.</p>`
+    <p class="fx-nota">Verde: aprobada · amarillo: pendiente · rosa: rechazada. ×2, ×3: cuántas fotos mandaron. Tocá un casillero para ver las fotos.</p>`
       : `<p class="fx-msg">Todavía no hay consignas.</p>`;
   }
 
@@ -218,7 +272,11 @@
     else if (t.dataset.editarJuego) editarJuego(t.dataset.editarJuego);
     else if (t.dataset.borrarJuego) borrarJuego(t.dataset.borrarJuego);
     else if (t.dataset.borrarJugador) borrarJugador(t.dataset.borrarJugador);
-    else if (t.dataset.revisar) revisar(t.dataset.id, t.dataset.revisar);
+    else if (t.dataset.revisar) {
+      revisar(t.dataset.id, t.dataset.revisar);
+      if (t.closest('#revisar')) irARevisar();
+    }
+    else if (t.dataset.saltar) saltar(t.dataset.saltar);
     else if (t.dataset.largar) largar(t.dataset.largar === '1');
     else if (t.dataset.celda) { const [eq, n] = t.dataset.celda.split(':'); abrirCelda(eq, Number(n)); }
     else if ('cerrar' in t.dataset) { celdaAbierta = null; $('#modal').hidden = true; }
@@ -237,40 +295,35 @@
     get() { try { return JSON.parse(localStorage.getItem('fotos-borrador')); } catch (e) { return null; } },
     set(v) { try { v ? localStorage.setItem('fotos-borrador', JSON.stringify(v)) : localStorage.removeItem('fotos-borrador'); } catch (e) {} },
   };
-  const textosEditor = () => [...$('#editor').querySelectorAll('textarea')].map(t => t.value);
-  const guardarBorrador = () => borrador.set(textosEditor());
-
-  function filaEditor(txt) {
-    const li = document.createElement('li');
-    li.innerHTML = `<textarea class="fx-input" rows="2"></textarea><button class="fx-link" type="button" aria-label="Borrar">✕</button>`;
-    li.querySelector('textarea').value = txt;
-    li.querySelector('button').addEventListener('click', () => { li.remove(); guardarBorrador(); });
-    return li;
-  }
+  // Una por línea. Si se pegan numeradas ("1. …", "2) …") o con viñetas, el número y la viñeta se sacan
+  const consignasEditor = () => $('#editor').value.split('\n')
+    .map(t => t.replace(/^\s*(\d+[.)]|[-•*])\s+/, '').trim()).filter(Boolean);
+  const contar = () => {
+    const n = consignasEditor().length;
+    $('#cuenta').textContent = n === 1 ? '1 consigna' : n + ' consignas';
+  };
 
   function cargarEditor() {
     const guardadas = datos.consignas || [];
     let b = borrador.get();
+    if (Array.isArray(b)) b = b.join('\n'); // borradores de cuando era un casillero por consigna
     // Un borrador igual a lo guardado no hace falta
-    if (!Array.isArray(b) || JSON.stringify(b.map(t => t.trim()).filter(Boolean)) === JSON.stringify(guardadas)) {
+    if (typeof b !== 'string' || JSON.stringify(b.split('\n').map(t => t.trim()).filter(Boolean)) === JSON.stringify(guardadas)) {
       borrador.set(null);
       b = null;
     }
-    const lista = b || (guardadas.length ? guardadas : Array(10).fill(''));
-    $('#editor').replaceChildren(...lista.map(filaEditor));
-    if (b) $('#guardarMsg').textContent = 'Recuperé lo que estabas escribiendo. Todavía no está guardado.';
+    $('#editor').value = b !== null ? b : guardadas.join('\n');
+    contar();
+    if (b !== null) $('#guardarMsg').textContent = 'Recuperé lo que estabas escribiendo. Todavía no está guardado.';
   }
 
-  $('#editor').addEventListener('input', guardarBorrador);
-
-  $('#agregar').addEventListener('click', () => {
-    const li = filaEditor('');
-    $('#editor').append(li);
-    li.querySelector('textarea').focus();
+  $('#editor').addEventListener('input', () => {
+    borrador.set($('#editor').value);
+    contar();
   });
 
   $('#guardar').addEventListener('click', async () => {
-    const consignas = textosEditor().map(t => t.trim()).filter(Boolean);
+    const consignas = consignasEditor();
     const msg = $('#guardarMsg');
     if (datos.inicio && consignas.length !== total() && !confirm('El juego ya largó y cambia la cantidad de consignas. ¿Guardar igual?')) return;
     msg.textContent = 'Guardando…';
@@ -298,6 +351,99 @@
       alert('No se pudo: ' + e.message);
     }
     refrescar();
+  });
+
+  // ===== BAJAR TODO =========================================================
+  // Un .zip con las fotos por equipo, un resumen para leer y los datos crudos
+  function cargarScript(src) {
+    return new Promise((ok, mal) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = ok;
+      s.onerror = () => mal(new Error('no se pudo cargar el armador de .zip'));
+      document.head.append(s);
+    });
+  }
+
+  const paraArchivo = s => String(s).replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '');
+  const recortar = (s, n) => (s.length > n ? s.slice(0, n).trim() + '…' : s);
+
+  function resumen(d, t) {
+    const consignas = d.consignas || [];
+    const lineas = [`Jacowaco's Games ${new Date(d.inicio || Date.now()).getFullYear()} · bajado el ${new Date().toLocaleString('es-AR', { hour12: false })}`, ''];
+    lineas.push('POSICIONES', ...F.posiciones(t.juegos).map(p => `${p.puesto}º ${p.equipo.nombre}: ${p.total} pts`), '');
+    lineas.push('JUEGOS', ...t.juegos.map((j, i) => `${i + 1}. ${j.nombre}${j.doble ? ' (×2)' : ''}: ` + C.equipos.slice()
+      .sort((a, b) => (j.puestos[a.id] || 9) - (j.puestos[b.id] || 9))
+      .map(e => `${e.nombre} ${j.puestos[e.id] ? j.puestos[e.id] + 'º' : '–'} (+${F.puntos(j, e.id)})`).join(' · ')), '');
+    lineas.push(`ANOTADOS (${t.jugadores.length})`, ...C.equipos.map(e => {
+      const js = t.jugadores.filter(j => j.equipo === e.id);
+      return `${e.nombre} (${js.length}): ${js.map(j => j.nombre).join(', ')}`;
+    }), '');
+    lineas.push('CAZA DE FOTOS', ...F.ranking(d.fotos, consignas.length).map((r, i) => `${i + 1}. ${r.equipo.nombre}: ${r.hechas}/${consignas.length}`
+      + (r.ultima ? ` · última aprobada ${F.hora(r.ultima)}` + (d.inicio ? ` (${F.duracion(r.ultima - d.inicio)})` : '') : '')), '');
+    lineas.push('CONSIGNAS', ...consignas.map((c, i) => `${i + 1}. ${c}`));
+    return lineas.join('\r\n');
+  }
+
+  $('#bajarTodo').addEventListener('click', async () => {
+    const btn = $('#bajarTodo'), msg = $('#bajarMsg');
+    btn.disabled = true;
+    msg.textContent = 'Leyendo los datos…';
+    try {
+      if (!window.JSZip) await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+      const [d, t] = await Promise.all([F.admin(clave), F.tablero.admin(clave)]);
+      const consignas = d.consignas || [];
+      const zip = new window.JSZip();
+      zip.file('resumen.txt', resumen(d, t));
+      zip.file('datos.json', JSON.stringify({
+        inicio: d.inicio && new Date(d.inicio).toISOString(),
+        consignas,
+        juegos: t.juegos.map(j => ({ nombre: j.nombre, doble: j.doble, puestos: j.puestos })),
+        // Sin los id: con el id se puede editar a esa persona
+        anotados: t.jugadores.map(j => ({ nombre: j.nombre, equipo: j.equipo })),
+        fotos: d.fotos.map(f => ({ equipo: f.equipo, consigna: f.consigna, autor: f.autor, estado: f.estado, subida: new Date(f.creada).toISOString() })),
+      }, null, 2));
+
+      // Nombre: "03 - Pizzas colgantes - Floraa - 17.27.31 - aprobada.jpg", dentro de la carpeta del equipo
+      const usados = new Set();
+      const cola = d.fotos.map(f => {
+        const base = `fotos/${f.equipo}/${String(f.consigna).padStart(2, '0')} - ${paraArchivo(recortar(consignas[f.consigna - 1] || 'consigna borrada', 45))}`
+          + ` - ${paraArchivo(f.autor || 'sin nombre')} - ${F.hora(f.creada).replace(/:/g, '.')} - ${f.estado}`;
+        let nombre = base + '.jpg';
+        for (let i = 2; usados.has(nombre); i++) nombre = `${base} (${i}).jpg`;
+        usados.add(nombre);
+        return { f, nombre };
+      });
+      let hechas = 0;
+      const fallaron = [];
+      await Promise.all(Array.from({ length: 4 }, async () => {
+        for (let x; (x = cola.shift());) {
+          try {
+            const r = await fetch(x.f.url);
+            if (!r.ok) throw new Error(r.status);
+            zip.file(x.nombre, await r.blob(), { date: new Date(x.f.creada) });
+          } catch (e) {
+            fallaron.push(x.nombre);
+          }
+          msg.textContent = `Bajando fotos: ${++hechas} de ${d.fotos.length}…`;
+        }
+      }));
+      if (fallaron.length) zip.file('fotos que no bajaron.txt', fallaron.join('\r\n'));
+
+      msg.textContent = 'Armando el .zip…';
+      const blob = await zip.generateAsync({ type: 'blob' }); // las fotos ya vienen comprimidas: se guardan tal cual
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `jacowacos-games-${new Date(d.inicio || Date.now()).getFullYear()}.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+      msg.textContent = `Listo: ${d.fotos.length - fallaron.length} fotos (${(blob.size / 1048576).toFixed(0)} MB)`
+        + (fallaron.length ? `. No bajaron ${fallaron.length}: la lista está adentro del .zip.` : '.');
+    } catch (e) {
+      msg.textContent = 'No se pudo: ' + e.message;
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   $('#salir').addEventListener('click', () => {
